@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e26477d30be95740952cbbec85fe3e6, type: 3}
+  m_Name: CarsStorage
+  m_EditorClassIdentifier: 
+  <CarDescriptors>k__BackingField:
+  - <CarType>k__BackingField: 1
+    <HorizontalSprite>k__BackingField: {fileID: -1445999350017554496, guid: 2529f58c0f0f4784d925363eac539680, type: 3}
+    <VerticalSprite>k__BackingField: {fileID: 3079434808264247364, guid: 2529f58c0f0f4784d925363eac539680, type: 3}
+    <Price>k__BackingField: 2400
+    <Speed>k__BackingField: 10
+    <Capacity>k__BackingField: 100
+  - <CarType>k__BackingField: 0
+    <HorizontalSprite>k__BackingField: {fileID: 0}
+    <VerticalSprite>k__BackingField: {fileID: 0}
+    <Price>k__BackingField: 0
+    <Speed>k__BackingField: 0
+    <Capacity>k__BackingField: 0
+  - <CarType>k__BackingField: 0
+    <HorizontalSprite>k__BackingField: {fileID: 0}
+    <VerticalSprite>k__BackingField: {fileID: 0}
+    <Price>k__BackingField: 0
+    <Speed>k__BackingField: 0
+    <Capacity>k__BackingField: 0
+  - <CarType>k__BackingField: 0
+    <HorizontalSprite>k__BackingField: {fileID: 0}
+    <VerticalSprite>k__BackingField: {fileID: 0}
+    <Price>k__BackingField: 0
+    <Speed>k__BackingField: 0
+    <Capacity>k__BackingField: 0
