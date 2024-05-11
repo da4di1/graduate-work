@@ -14,7 +14,7 @@ namespace Core.Scene
         [Header("Path Drawing")] 
         [SerializeField] private LineRenderer _lineRenderer;
 
-        [Header("Path Drawing")] 
+        [Header("Cars System")] 
         [SerializeField] private CarsStorage _carsStorage;
         
         private ProjectUpdater _projectUpdater;

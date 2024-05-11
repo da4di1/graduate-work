@@ -4,6 +4,7 @@ using System.Linq;
 using CarsSystem;
 using CarsSystem.Enums;
 using Core.Services.Updater;
+using Core.UI;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -20,7 +21,6 @@ namespace PathBuilding
         private bool _isDragging;
         private Vector3 _nextPointCoords;
         private int _linePointIndex;
-        private bool _arePathPointsActive;
         
         
         public PathDrawer(LineRenderer lineRenderer, CarSystem carSystem)
@@ -38,8 +38,7 @@ namespace PathBuilding
         public void StartDrawingPath()
         {
             ProjectUpdater.Instance.UpdateCalled += OnUpdate;
-
-            _arePathPointsActive = true;
+            
             foreach (var point in _pathPoints)
             {
                 point.gameObject.SetActive(true);
@@ -53,13 +52,6 @@ namespace PathBuilding
             _lineRenderer.positionCount = 0;
             _linePointIndex = 0;
             _builtPath.Clear();
-            
-            if (!_arePathPointsActive) return;
-            _arePathPointsActive = false;
-            foreach (var point in _pathPoints)
-            {
-                point.gameObject.SetActive(false);
-            }
         }
 
         private void OnUpdate()
@@ -142,23 +134,40 @@ namespace PathBuilding
                 if (hasHit.collider && hasHit.collider.TryGetComponent(out PathPointDescriptor currentPoint) 
                     && _builtPath.Last().NextPointsIds.Contains(currentPoint.Id) && _builtPath.All(point => point.Id != currentPoint.Id))
                 {
-                    _builtPath.Add(currentPoint);
                     if (currentPoint.IsEndingPoint)
                     {
                         _isDragging = false;
-
-                        Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
-                        _lineRenderer.GetPositions(pathPositions);
-                        _carSystem.SpawnCar(CarType.Pickup, pathPositions);
+                        QuestionUIController.Instance.ShowQuestion("Do you want to finish path building?", () =>
+                        {
+                            _builtPath.Add(currentPoint);
+                            
+                            Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
+                            _lineRenderer.GetPositions(pathPositions);
+                            _carSystem.SpawnCar(CarType.Pickup, pathPositions);
                         
-                        Dispose();
+                            Dispose();
+                            TurnPointsOff();
+                        }, () =>
+                        {
+                            _isDragging = true;
+                        });
+                        
                     }
                     else
                     {
+                        _builtPath.Add(currentPoint);
                         _lineRenderer.positionCount += 1;
                         _linePointIndex += 1;
                     }
                 }
+            }
+        }
+
+        private void TurnPointsOff()
+        {
+            foreach (var point in _pathPoints)
+            {
+                point.gameObject.SetActive(false);
             }
         }
     }

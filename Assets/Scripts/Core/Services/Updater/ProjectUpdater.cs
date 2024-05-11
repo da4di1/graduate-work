@@ -5,7 +5,7 @@ namespace Core.Services.Updater
 {
     public class ProjectUpdater : MonoBehaviour, IProjectUpdater
     {
-        public static IProjectUpdater Instance;
+        public static IProjectUpdater Instance { get; private set; }
         
         private bool _isPaused;
         
