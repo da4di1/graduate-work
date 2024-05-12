@@ -19,6 +19,7 @@ namespace PathBuilding
         private readonly PathPointDescriptor[] _pathPoints;
         
         private bool _isDragging;
+        private bool _hasQuestionAppeared;
         private Vector3 _nextPointCoords;
         private int _linePointIndex;
         
@@ -56,6 +57,7 @@ namespace PathBuilding
 
         private void OnUpdate()
         {
+            if (_hasQuestionAppeared) return;
             CheckDragging();
             CheckMouse();
             CheckPathCancellation();
@@ -136,9 +138,10 @@ namespace PathBuilding
                 {
                     if (currentPoint.IsEndingPoint)
                     {
-                        _isDragging = false;
+                        _hasQuestionAppeared = true;
                         QuestionUIController.Instance.ShowQuestion("Do you want to finish path building?", () =>
                         {
+                            _hasQuestionAppeared = false;
                             _builtPath.Add(currentPoint);
                             
                             Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
@@ -149,7 +152,7 @@ namespace PathBuilding
                             TurnPointsOff();
                         }, () =>
                         {
-                            _isDragging = true;
+                            _hasQuestionAppeared = false;
                         });
                         
                     }
