@@ -32,8 +32,7 @@ namespace PathBuilding
             _camera = Camera.main;
             _lineRenderer.positionCount = 0;
             _pathPoints = Object.FindObjectsOfType<PathPointDescriptor>();
-            
-            StartDrawingPath();
+            TurnPointsOff();
         }
 
         public void StartDrawingPath()
@@ -147,7 +146,8 @@ namespace PathBuilding
                             Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
                             _lineRenderer.GetPositions(pathPositions);
                             _carSystem.SpawnCar(CarType.Pickup, pathPositions);
-                        
+
+                            _isDragging = false;
                             Dispose();
                             TurnPointsOff();
                         }, () =>
