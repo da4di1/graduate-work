@@ -12,7 +12,11 @@ namespace Core.UI
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private Button _yesButton;
         [SerializeField] private Button _noButton;
+        
+        public bool IsQuestionUIShown { get; private set; }
 
+        public event Action QuestionAppeared;
+        public event Action QuestionDisappeared;
 
         private void Awake()
         {
@@ -28,26 +32,30 @@ namespace Core.UI
 
         public void ShowQuestion(string text, Action yesButtonClicked, Action noButtonClicked)
         {
+            QuestionAppeared?.Invoke();
             gameObject.SetActive(true);
+            IsQuestionUIShown = true;
 
             _text.text = text;
             _yesButton.onClick.AddListener(() =>
             {
                 Hide();
-                yesButtonClicked();
+                yesButtonClicked?.Invoke();
                 RemoveButtonListeners();
             });
             _noButton.onClick.AddListener(() =>
             {
                 Hide();
-                noButtonClicked();
+                noButtonClicked?.Invoke();
                 RemoveButtonListeners();
             });
         }
 
         private void Hide()
         {
+            QuestionDisappeared?.Invoke();
             gameObject.SetActive(false);
+            IsQuestionUIShown = false;
         }
 
         private void RemoveButtonListeners()

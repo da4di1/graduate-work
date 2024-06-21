@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <CarDescriptors>k__BackingField:
   - <CarType>k__BackingField: 1
-    <HorizontalSprite>k__BackingField: {fileID: -1445999350017554496, guid: 2529f58c0f0f4784d925363eac539680, type: 3}
-    <VerticalSprite>k__BackingField: {fileID: 3079434808264247364, guid: 2529f58c0f0f4784d925363eac539680, type: 3}
+    <HorizontalSprite>k__BackingField: {fileID: -1250959848, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <VerticalSprite>k__BackingField: {fileID: -2077155942, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
     <Price>k__BackingField: 2400
     <Speed>k__BackingField: 10
     <Capacity>k__BackingField: 100

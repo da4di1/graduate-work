@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Core.Services.Updater;
+using Core.UI;
+using UnityEngine;
 using WarehousingSystem.Enums;
 
 namespace WarehousingSystem.Behaviour
@@ -21,16 +23,25 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseEnter()
         {
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown) return;
             _selectionBgSprite.enabled = true;
         }
 
         private void OnMouseExit()
         {
-            _selectionBgSprite.enabled = false;
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown)
+            {
+                QuestionUIController.Instance.QuestionDisappeared += TurnBackgroundOff;
+            }
+            else
+            {
+                _selectionBgSprite.enabled = false;
+            }
         }
 
         private void OnMouseDown()
         {
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown) return;
             Clicked = true;
         }
 
@@ -51,7 +62,12 @@ namespace WarehousingSystem.Behaviour
                 color.a = TransparencyPercent;
                 _selectionBgSprite.color = color;
             }
-             
+        }
+
+        private void TurnBackgroundOff()
+        {
+            _selectionBgSprite.enabled = false;
+            QuestionUIController.Instance.QuestionDisappeared -= TurnBackgroundOff;
         }
     }
 }

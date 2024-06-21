@@ -15,6 +15,6 @@ MonoBehaviour:
   <WarehouseDescriptors>k__BackingField:
   - <Id>k__BackingField: 1
     <WarehouseType>k__BackingField: 1
-    <Price>k__BackingField: 100
+    <Price>k__BackingField: 10000
     <ProductCapacity>k__BackingField: 100
     <CarCapacity>k__BackingField: 100

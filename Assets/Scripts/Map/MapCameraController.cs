@@ -1,41 +1,58 @@
+using System;
+using Core.Services.Updater;
+using Core.UI;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 namespace Map
 {
-    public class CameraMovement : MonoBehaviour
+    public class MapCameraController : IDisposable
     {
-        [SerializeField] private Camera _cam;
-        [SerializeField] private float _zoomStep;
-        [SerializeField] private float _minCamSize;
-        [SerializeField] private TilemapRenderer _mapRenderer;
-
-        private float _maxCamSize;
-        private float _mapMinX;
-        private float _mapMaxX;
-        private float _mapMinY;
-        private float _mapMaxY;
+        private readonly Camera _cam;
+        private readonly float _zoomStep;
+        private readonly float _minCamSize;
+        private readonly TilemapRenderer _mapRenderer;
+        private readonly float _maxCamSize;
+        private readonly float _mapMinX;
+        private readonly float _mapMaxX;
+        private readonly float _mapMinY;
+        private readonly float _mapMaxY;
         private Vector3 _dragOrigin;
+        private bool _isCameraStopped;
 
 
-        private void Awake()
+        public MapCameraController(Camera cam, float zoomStep, float minCamSize, TilemapRenderer mapRenderer)
         {
+            _cam = cam;
+            _zoomStep = zoomStep;
+            _minCamSize = minCamSize;
+            
             _maxCamSize = _cam.orthographicSize;
         
-            _mapMinX = _mapRenderer.bounds.center.x - _mapRenderer.bounds.size.x / 2f;
-            _mapMaxX = _mapRenderer.bounds.center.x + _mapRenderer.bounds.size.x / 2f;
+            _mapMinX = mapRenderer.bounds.center.x - mapRenderer.bounds.size.x / 2f;
+            _mapMaxX = mapRenderer.bounds.center.x + mapRenderer.bounds.size.x / 2f;
 
-            _mapMinY = _mapRenderer.bounds.center.y - _mapRenderer.bounds.size.y / 2f;
-            _mapMaxY = _mapRenderer.bounds.center.y + _mapRenderer.bounds.size.y / 2f - 1f;
+            _mapMinY = mapRenderer.bounds.center.y - mapRenderer.bounds.size.y / 2f;
+            _mapMaxY = mapRenderer.bounds.center.y + mapRenderer.bounds.size.y / 2f - 1f;
+
+            QuestionUIController.Instance.QuestionAppeared += StopCamera;
+            QuestionUIController.Instance.QuestionDisappeared += StartCameraMovement;
+            StartCameraMovement();
+        }
+
+        public void Dispose()
+        {
+            QuestionUIController.Instance.QuestionAppeared -= StopCamera;
+            QuestionUIController.Instance.QuestionDisappeared -= StartCameraMovement;
+            StopCamera();
         }
     
-        private void Update()
+        private void OnUpdate()
         {
             PanCamera();
             Zoom();
         }
-    
-    
+        
         private void PanCamera()
         {
             if (Input.GetMouseButtonDown(0))
@@ -46,7 +63,6 @@ namespace Map
                 Vector3 difference = _dragOrigin - _cam.ScreenToWorldPoint(Input.mousePosition);
 
                 _cam.transform.position = ClampCamera(_cam.transform.position + difference); 
-
             }
         }
 
@@ -82,6 +98,16 @@ namespace Map
             float newY = Mathf.Clamp(targetPosition.y, minY, maxY);
 
             return new Vector3(newX, newY, targetPosition.z);
+        }
+
+        private void StartCameraMovement()
+        {
+            ProjectUpdater.Instance.UpdateCalled += OnUpdate;
+        }
+
+        private void StopCamera()
+        {
+            ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
     }
 }

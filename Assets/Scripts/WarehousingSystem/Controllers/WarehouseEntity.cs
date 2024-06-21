@@ -40,7 +40,7 @@ namespace WarehousingSystem.Controllers
                     {
                         _isPurchasable = false;
                         _warehouseBehaviour.GetPurchased();
-                    }, (() => {}));
+                    }, null);
                 }
                 else
                 {
