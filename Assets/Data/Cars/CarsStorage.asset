@@ -16,24 +16,28 @@ MonoBehaviour:
   - <CarType>k__BackingField: 1
     <HorizontalSprite>k__BackingField: {fileID: -1250959848, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
     <VerticalSprite>k__BackingField: {fileID: -2077155942, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
-    <Price>k__BackingField: 2400
+    <Cost>k__BackingField: 800
+    <SalePrice>k__BackingField: 600
     <Speed>k__BackingField: 10
-    <Capacity>k__BackingField: 100
-  - <CarType>k__BackingField: 0
-    <HorizontalSprite>k__BackingField: {fileID: 0}
-    <VerticalSprite>k__BackingField: {fileID: 0}
-    <Price>k__BackingField: 0
-    <Speed>k__BackingField: 0
-    <Capacity>k__BackingField: 0
-  - <CarType>k__BackingField: 0
-    <HorizontalSprite>k__BackingField: {fileID: 0}
-    <VerticalSprite>k__BackingField: {fileID: 0}
-    <Price>k__BackingField: 0
-    <Speed>k__BackingField: 0
-    <Capacity>k__BackingField: 0
-  - <CarType>k__BackingField: 0
-    <HorizontalSprite>k__BackingField: {fileID: 0}
-    <VerticalSprite>k__BackingField: {fileID: 0}
-    <Price>k__BackingField: 0
-    <Speed>k__BackingField: 0
-    <Capacity>k__BackingField: 0
+    <Capacity>k__BackingField: 50
+  - <CarType>k__BackingField: 2
+    <HorizontalSprite>k__BackingField: {fileID: -1082367680, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <VerticalSprite>k__BackingField: {fileID: -1209026473, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <Cost>k__BackingField: 1400
+    <SalePrice>k__BackingField: 1000
+    <Speed>k__BackingField: 12
+    <Capacity>k__BackingField: 80
+  - <CarType>k__BackingField: 3
+    <HorizontalSprite>k__BackingField: {fileID: -13758085, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <VerticalSprite>k__BackingField: {fileID: 14750493, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <Cost>k__BackingField: 2200
+    <SalePrice>k__BackingField: 1750
+    <Speed>k__BackingField: 16
+    <Capacity>k__BackingField: 110
+  - <CarType>k__BackingField: 4
+    <HorizontalSprite>k__BackingField: {fileID: 351535488, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <VerticalSprite>k__BackingField: {fileID: 1699349478, guid: a44d412f6204b0443abd89d5114a7233, type: 3}
+    <Cost>k__BackingField: 3400
+    <SalePrice>k__BackingField: 2800
+    <Speed>k__BackingField: 20
+    <Capacity>k__BackingField: 150

@@ -34,7 +34,7 @@ namespace Core.Timer
                 TimeExpired?.Invoke();
             }
             TimeSpan formatedTime = TimeSpan.FromSeconds(_currentTime);
-            _currentTimeText.text = formatedTime.Minutes.ToString() + ":" + formatedTime.Seconds.ToString();
+            _currentTimeText.text = formatedTime.Minutes + ":" + formatedTime.Seconds;
         }
     }
 }

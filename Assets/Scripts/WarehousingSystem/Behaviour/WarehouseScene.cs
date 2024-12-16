@@ -1,5 +1,7 @@
 ﻿using Core.Services.Updater;
-using Core.UI;
+using Core.UI.DialogUI;
+using Core.UI.QuestionUI;
+using Core.UI.WarehouseInventory;
 using UnityEngine;
 using WarehousingSystem.Enums;
 
@@ -23,15 +25,19 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseEnter()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown) return;
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+                WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             _selectionBgSprite.enabled = true;
         }
 
         private void OnMouseExit()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown)
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+                WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown)
             {
                 QuestionUIController.Instance.QuestionDisappeared += TurnBackgroundOff;
+                DialogUIController.Instance.DialogDisappeared += TurnBackgroundOff;
+                WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += TurnBackgroundOff;
             }
             else
             {
@@ -41,7 +47,8 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseDown()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown) return;
+            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+                WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             Clicked = true;
         }
 
@@ -52,9 +59,19 @@ namespace WarehousingSystem.Behaviour
 
         public void GetPurchased()
         {
-            _iconSprite.sprite = Resources.Load<Sprite>($"{nameof(WarehousingSystem)}/{nameof(Sprite)}/YoursIcon");
-
             if (ColorUtility.TryParseHtmlString(BlueColor, out Color colorToSet))
+            {
+                _iconSprite.color = colorToSet;
+                _selectionBgSprite.color = colorToSet;
+                var color = _selectionBgSprite.color;
+                color.a = TransparencyPercent;
+                _selectionBgSprite.color = color;
+            }
+        }
+
+        public void GetSold()
+        {
+            if (ColorUtility.TryParseHtmlString(GreenColor, out Color colorToSet))
             {
                 _iconSprite.color = colorToSet;
                 _selectionBgSprite.color = colorToSet;
@@ -68,6 +85,8 @@ namespace WarehousingSystem.Behaviour
         {
             _selectionBgSprite.enabled = false;
             QuestionUIController.Instance.QuestionDisappeared -= TurnBackgroundOff;
+            DialogUIController.Instance.DialogDisappeared -= TurnBackgroundOff;
+            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= TurnBackgroundOff;
         }
     }
 }

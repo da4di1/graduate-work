@@ -19,7 +19,11 @@ namespace CarsSystem
         public CarEntity CreateCar(CarType carType, Vector3[] pathPositions)
         {
             CarDescriptor carDescriptor = _carDescriptors.Find(descriptor => descriptor.CarType == carType);
-            CarEntity carEntity = new CarEntity(carDescriptor, pathPositions);
+            CarEntity carEntity = null;
+            if (carDescriptor != null)
+            {
+                carEntity = new CarEntity(carDescriptor, pathPositions);
+            }
             return carEntity;
         }
     }

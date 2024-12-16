@@ -1,58 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using Core.Enums;
-using Core.UI;
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
 
 namespace Core.Services.PlayFab
 {
-    public class PlayFabManager : MonoBehaviour
+    public class PlayFabManager : IPlayFabEventsManager, IPlayFabOperationsManager
     {
-        public static PlayFabManager Instance { get; private set; }
-
-        [SerializeField] private MainMenuUIController _mainMenuUIController;
+        public static IPlayFabEventsManager EventsManager { get; private set; }
+        public static IPlayFabOperationsManager OperationsManager { get; private set; }
 
         private bool _isLoginErrorOccuring;
         private bool _isLoginUpdatingNicknameErrorOccuring;
         private bool _isUpdatingLeaderboardErrorOccuring;
         private bool _isGettingLeaderboardErrorOccuring;
         private int _statValue;
+        
+        public string ReceivedPlayerAccountNickname { get; private set; }
 
         public event Action<GameStartingScreenType> SuccessfullyLogged;
         public event Action NicknameSubmitted;
-        public event Action GotLeaderboard;
+        public event Action<List<PlayerLeaderboardEntry>> LeaderboardReceived;
         public event Action LeaderboardUpdated;
         public event Action NotAvailableNicknameErrorOccured;
         public event Action ErrorOccured;
+
         
-        private void Awake()
+        public PlayFabManager()
         {
-            Instance = this;
+            if (EventsManager != null || OperationsManager != null) return;
+            EventsManager = this;
+            OperationsManager = this;
             
             Login();
         }
-        
-        public void Login()
-        {
-            var request = new LoginWithCustomIDRequest
-            {
-                CustomId = SystemInfo.deviceUniqueIdentifier,
-                CreateAccount = true,
-                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
-                {
-                    GetPlayerProfile = true,
-                }
-            };
-            PlayFabClientAPI.LoginWithCustomID(request, OnSuccessfullyLogged, OnLoginErrorOccured);
-        }
 
-        public void SubmitNickname()
+        public void SubmitNickname(string nickname)
         {
             var request = new UpdateUserTitleDisplayNameRequest
             {
-                DisplayName = _mainMenuUIController.EnteredNickname.text,
+                DisplayName = nickname,
             };
             PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnNicknameSubmitted, OnSubmittingNicknameErrorOccured);
         }
@@ -65,7 +54,7 @@ namespace Core.Services.PlayFab
                 StartPosition = 0,
                 MaxResultsCount = 10,
             };
-            PlayFabClientAPI.GetLeaderboard(request, OnGotLeaderboard, OnGetLeaderboardErrorOccured);
+            PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardReceived, OnGettingLeaderboardErrorOccured);
         }
 
         public void UpdateLeaderboard(int statValue)
@@ -90,32 +79,46 @@ namespace Core.Services.PlayFab
             if (_isLoginErrorOccuring) Login();
             if (_isUpdatingLeaderboardErrorOccuring) UpdateLeaderboard(_statValue);
             if (_isGettingLeaderboardErrorOccuring) GetLeaderboard();
-            if (_isLoginUpdatingNicknameErrorOccuring) SubmitNickname();
+            if (_isLoginUpdatingNicknameErrorOccuring) SubmitNickname(ReceivedPlayerAccountNickname);
+        }
+        
+        private void Login()
+        {
+            var request = new LoginWithCustomIDRequest
+            {
+                CustomId = SystemInfo.deviceUniqueIdentifier,
+                CreateAccount = true,
+                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
+                {
+                    GetPlayerProfile = true,
+                }
+            };
+            PlayFabClientAPI.LoginWithCustomID(request, OnSuccessfullyLogged, OnLoginErrorOccured);
         }
         
         private void OnSuccessfullyLogged(LoginResult result)
         {
-            string nickname = null;
-            if (result.InfoResultPayload.PlayerProfile != null) nickname = result.InfoResultPayload.PlayerProfile.DisplayName;
+            ReceivedPlayerAccountNickname = null;
+            if (result.InfoResultPayload.PlayerProfile != null) ReceivedPlayerAccountNickname = result.InfoResultPayload.PlayerProfile.DisplayName;
 
             Debug.Log("Account successfully logged-in/created!");
-            SuccessfullyLogged?.Invoke(nickname == null ? GameStartingScreenType.EnteringNicknameWindow : GameStartingScreenType.MainMenu);
+            SuccessfullyLogged?.Invoke(ReceivedPlayerAccountNickname == null ? GameStartingScreenType.EnteringNicknameWindow : GameStartingScreenType.MainMenu);
             _isLoginErrorOccuring = false;
         }
 
         private void OnNicknameSubmitted(UpdateUserTitleDisplayNameResult result)
         {
+            ReceivedPlayerAccountNickname = result.DisplayName;
+            
             Debug.Log("Player`s nickname has been saved!");
             NicknameSubmitted?.Invoke();
             _isLoginUpdatingNicknameErrorOccuring = false;
         }
         
-        private void OnGotLeaderboard(GetLeaderboardResult result)
+        private void OnLeaderboardReceived(GetLeaderboardResult result)
         {
-            _mainMenuUIController.UpdateLeaderboard(result.Leaderboard);
-            
             Debug.Log("Leaderboard has been successfully received from server!");
-            GotLeaderboard?.Invoke();
+            LeaderboardReceived?.Invoke(result.Leaderboard);
             _isGettingLeaderboardErrorOccuring = false;
         }
         
@@ -151,7 +154,7 @@ namespace Core.Services.PlayFab
             _isUpdatingLeaderboardErrorOccuring = true;
         }
         
-        private void OnGetLeaderboardErrorOccured(PlayFabError error)
+        private void OnGettingLeaderboardErrorOccured(PlayFabError error)
         {
             OnErrorOccured(error);
             _isGettingLeaderboardErrorOccuring = true;
@@ -159,6 +162,7 @@ namespace Core.Services.PlayFab
 
         private void OnErrorOccured(PlayFabError error)
         {
+            
             Debug.Log(error.GenerateErrorReport());
             ErrorOccured?.Invoke();
         }

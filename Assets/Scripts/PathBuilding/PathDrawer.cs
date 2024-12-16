@@ -4,7 +4,7 @@ using System.Linq;
 using CarsSystem;
 using CarsSystem.Enums;
 using Core.Services.Updater;
-using Core.UI;
+using Core.UI.QuestionUI;
 using UnityEngine;
 using Object = UnityEngine.Object;
 

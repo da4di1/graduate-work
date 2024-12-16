@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CarsSystem;
 using CarsSystem.Data;
 using CarsSystem.Storages;
+using Core.PlayerAccount.Controllers;
 using Core.Services.PlayFab;
 using Core.Services.Updater;
 using Core.Timer;
 using Core.UI;
+using Core.UI.DialogUI;
+using Core.UI.QuestionUI;
+using Core.UI.WarehouseInventory;
 using Map;
 using PathBuilding;
 using TMPro;
@@ -23,14 +28,17 @@ namespace Core.Scene
 {
     public class GameController : MonoBehaviour
     {
-        [Header("Timer")] 
+        [Header("Game parameters")] 
         [SerializeField] private int _timeInMinutes;
         [SerializeField] private TextMeshProUGUI _currentTimeText;
+        [SerializeField] private int _startingMoneyAmount;
         
         [Header("UI")] 
         [SerializeField] private Transform _userInterface;
         [SerializeField] private Transform _loadingScreen;
         [SerializeField] private LayerMask _viewUIMask;
+        [SerializeField] private GameSessionMenuUIController _gameUIController;
+        [SerializeField] private WarehouseInventoryController _warehouseInventoryController;
         
         [Header("Map Camera")]
         [SerializeField] private Camera _cam;
@@ -50,21 +58,24 @@ namespace Core.Scene
         [Header("Post-Process")]
         [SerializeField] private PostProcessVolume _postProcessVolume;
         [SerializeField] private PostProcessLayer _postProcessLayer;
-        
+
+        private PlayerAccountController _playerAccount;
         private ProjectUpdater _projectUpdater;
         private TimerController _timerController;
         private MapCameraController _mapCameraController;
         private PathDrawer _pathDrawer;
         private CarSystem _carsSystem;
         private WarehouseScene[] _warehousesBehaviours;
-        private Button[] _buttons;
+        private List<Button[]> _stopButtonsLayers;
         private List<Transform> _openedUIWindows;
-        private List<WarehouseEntity> _warehouseEntities;
         private List<IDisposable> _disposables;
     
     
         private void Awake()
         {
+            _playerAccount = new PlayerAccountController(PlayFabManager.OperationsManager.ReceivedPlayerAccountNickname, _startingMoneyAmount);
+            _gameUIController.Initialize(_playerAccount);
+            
             _disposables = new List<IDisposable>();
 
             if (ProjectUpdater.Instance == null)
@@ -91,15 +102,16 @@ namespace Core.Scene
             
             _pathDrawer = new PathDrawer(_lineRenderer, _carsSystem);
             _disposables.Add(_pathDrawer);
-
-            _warehouseEntities = new List<WarehouseEntity>();
+            
+            _warehouseInventoryController.Initialize(carDescriptors, _pathDrawer);
+            _stopButtonsLayers = new List<Button[]>();
+            
             _warehousesBehaviours = FindObjectsOfType<WarehouseScene>();
             foreach (var warehouseBehaviour in _warehousesBehaviours)
             {
                 WarehouseDescriptor descriptor = _warehousesStorage.WarehouseDescriptors.Find(descriptor => descriptor.Id == warehouseBehaviour.WarehouseId);
 
-                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, _pathDrawer);
-                _warehouseEntities.Add(warehouseEntity);
+                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, _pathDrawer, carsFactory);
                 _disposables.Add(warehouseEntity);
             }
         }
@@ -111,6 +123,10 @@ namespace Core.Scene
 
             QuestionUIController.Instance.QuestionAppeared += PauseInterface;
             QuestionUIController.Instance.QuestionDisappeared += UnPauseInterface;
+            DialogUIController.Instance.DialogAppeared += PauseInterface;
+            DialogUIController.Instance.DialogDisappeared += UnPauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryAppeared += PauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;
         }
         
         private void OnDestroy()
@@ -118,6 +134,10 @@ namespace Core.Scene
             _timerController.TimeExpired -= FinishGame;
             QuestionUIController.Instance.QuestionAppeared -= PauseInterface;
             QuestionUIController.Instance.QuestionDisappeared -= UnPauseInterface;
+            DialogUIController.Instance.DialogAppeared -= PauseInterface;
+            DialogUIController.Instance.DialogDisappeared -= UnPauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= PauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= UnPauseInterface;
             
             foreach (var disposable in _disposables)
             {
@@ -150,8 +170,13 @@ namespace Core.Scene
 
         private void PauseInterface()
         {
-            _buttons = FindObjectsOfType<Button>();
-            foreach (var button in _buttons)
+            Button[] newButtonsLayer = FindObjectsOfType<Button>();
+            foreach (var buttonsLayer in _stopButtonsLayers)
+            {
+                newButtonsLayer = newButtonsLayer.Except(buttonsLayer).ToArray();
+            }
+            _stopButtonsLayers.Add(newButtonsLayer);
+            foreach (var button in newButtonsLayer)
             {
                 if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue;
                 button.interactable = false;
@@ -160,11 +185,14 @@ namespace Core.Scene
 
         private void UnPauseInterface()
         {
-            foreach (var button in _buttons)
+            Button[] lastButtonLayer = _stopButtonsLayers.ElementAtOrDefault(_stopButtonsLayers.Count - 1);
+            if (lastButtonLayer == null) return;
+            foreach (var button in lastButtonLayer)
             {
                 if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue;
                 button.interactable = true;
             }
+            _stopButtonsLayers.Remove(lastButtonLayer);
         }
 
         private void FinishGame()
@@ -173,7 +201,7 @@ namespace Core.Scene
             _loadingScreen.gameObject.SetActive(true);
             _postProcessVolume.enabled = true;
             _postProcessLayer.enabled = true;
-            PlayFabManager.Instance.UpdateLeaderboard(0);
+            PlayFabManager.OperationsManager.UpdateLeaderboard(250000);
         }
     }
 }

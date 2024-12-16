@@ -1,13 +1,14 @@
 using System;
 using CarsSystem.Behaviour;
 using CarsSystem.Data;
+using CarsSystem.Interfaces;
 using Core.Services.Updater;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace CarsSystem.Controllers
 {
-    public class CarEntity : IDisposable
+    public class CarEntity : IDisposable, ICarInformation
     {
         private readonly Vector3[] _pathPositions;
         
@@ -16,7 +17,7 @@ namespace CarsSystem.Controllers
         private int _movementPointIndex;
         private bool _isMovingBack;
         
-        public CarDescriptor Descriptor { get; private set; }
+        public CarDescriptor Descriptor { get; }
 
 
         public CarEntity(CarDescriptor descriptor, Vector3[] pathPositions)

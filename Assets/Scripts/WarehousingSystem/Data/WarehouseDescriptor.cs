@@ -9,7 +9,8 @@ namespace WarehousingSystem.Data
     {
         [field: SerializeField] public WarehouseId Id { get; private set; }
         [field: SerializeField] public WarehouseType WarehouseType { get; private set; }
-        [field: SerializeField] public float Price { get; private set; }
+        [field: SerializeField] public float Cost { get; private set; }
+        [field: SerializeField] public float SalePrice { get; private set; }
         [field: SerializeField] public float ProductCapacity { get; private set; }
         [field: SerializeField] public float CarCapacity { get; private set; }
     }

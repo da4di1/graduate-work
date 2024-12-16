@@ -1,4 +1,6 @@
+using Core.PlayerAccount.Interfaces;
 using Core.Services.PlayFab;
+using Core.UI.DialogUI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,18 +11,25 @@ namespace Core.UI
         [SerializeField] private Transform _gameOverInterface;
         [SerializeField] private Transform _loadingScreen;
         [SerializeField] private Transform _errorScreen;
+
+        private IPlayerInformation _playerInformation;
         
         
         private void Start()
         {
-            PlayFabManager.Instance.LeaderboardUpdated += ShowGameOverScreen;
-            PlayFabManager.Instance.ErrorOccured += ShowErrorMessage;
+            PlayFabManager.EventsManager.LeaderboardUpdated += ShowGameOverScreen;
+            PlayFabManager.EventsManager.ErrorOccured += ShowErrorMessage;
         }
 
         private void OnDestroy()
         {
-            PlayFabManager.Instance.LeaderboardUpdated -= ShowGameOverScreen;
-            PlayFabManager.Instance.ErrorOccured -= ShowErrorMessage;
+            PlayFabManager.EventsManager.LeaderboardUpdated -= ShowGameOverScreen;
+            PlayFabManager.EventsManager.ErrorOccured -= ShowErrorMessage;
+        }
+
+        public void Initialize(IPlayerInformation playerInformation)
+        {
+            _playerInformation = playerInformation;
         }
         
         public void RestartGame()
@@ -40,10 +49,22 @@ namespace Core.UI
 
             SceneManager.LoadScene(mainMenuSceneIndex); 
         }
+
+        public void ShowPlayerInformation()
+        {
+            if (DialogUIController.Instance.IsDialogUIShown) return;
+            DialogUIController.Instance.ShowDialog($"PLAYER INFORMATION\n" +
+                                                   $"Nickname: {_playerInformation.NickName}\n" +
+                                                   $"Money: {_playerInformation.MoneyAmount}$\n" +
+                                                   $"Income: {_playerInformation.Income}$\n" +
+                                                   $"Warehouses: {_playerInformation.GetWarehousesAmount()}\n" +
+                                                   $"Cars: {_playerInformation.GetCarsAmount()}\n" +
+                                                   $"Active contracts: {_playerInformation.ActiveContractsAmount}", null);
+        }
         
         public void TryAvoidError()
         {
-            PlayFabManager.Instance.RepeatServerActions();
+            PlayFabManager.OperationsManager.RepeatServerActions();
         }
 
         private void ShowGameOverScreen()

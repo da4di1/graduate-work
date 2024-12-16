@@ -31,24 +31,34 @@ namespace Core.UI
         private void Awake()
         {
             _loadingScreen.gameObject.SetActive(true);
+
+            if (PlayFabManager.EventsManager == null && PlayFabManager.OperationsManager == null)
+            {
+                PlayFabManager playFabManager = new PlayFabManager();
+            }
+            else
+            {
+                _loadingScreen.gameObject.SetActive(false);
+                _mainMenuInterface.gameObject.SetActive(true);
+            }
         }
 
         private void Start()
         {
-            PlayFabManager.Instance.SuccessfullyLogged += ShowStartingMenu;
-            PlayFabManager.Instance.NicknameSubmitted += ShowMainMenu;
-            PlayFabManager.Instance.GotLeaderboard += ShowLeaderboard;
-            PlayFabManager.Instance.NotAvailableNicknameErrorOccured += ShowNicknameErrorMessage;
-            PlayFabManager.Instance.ErrorOccured += ShowErrorMessage;
+            PlayFabManager.EventsManager.SuccessfullyLogged += ShowStartingMenu;
+            PlayFabManager.EventsManager.NicknameSubmitted += ShowMainMenu;
+            PlayFabManager.EventsManager.LeaderboardReceived += ShowLeaderboard;
+            PlayFabManager.EventsManager.NotAvailableNicknameErrorOccured += ShowNicknameErrorMessage;
+            PlayFabManager.EventsManager.ErrorOccured += ShowErrorMessage;
         }
 
         private void OnDestroy()
         {
-            PlayFabManager.Instance.SuccessfullyLogged -= ShowStartingMenu;
-            PlayFabManager.Instance.NicknameSubmitted -= ShowMainMenu;
-            PlayFabManager.Instance.GotLeaderboard -= ShowLeaderboard;
-            PlayFabManager.Instance.NotAvailableNicknameErrorOccured -= ShowNicknameErrorMessage;
-            PlayFabManager.Instance.ErrorOccured -= ShowErrorMessage;
+            PlayFabManager.EventsManager.SuccessfullyLogged -= ShowStartingMenu;
+            PlayFabManager.EventsManager.NicknameSubmitted -= ShowMainMenu;
+            PlayFabManager.EventsManager.LeaderboardReceived -= ShowLeaderboard;
+            PlayFabManager.EventsManager.NotAvailableNicknameErrorOccured -= ShowNicknameErrorMessage;
+            PlayFabManager.EventsManager.ErrorOccured -= ShowErrorMessage;
         }
 
         public void StartGame()
@@ -70,26 +80,19 @@ namespace Core.UI
             Application.Quit();
         }
 
-        public void UpdateLeaderboard(List<PlayerLeaderboardEntry> table)
+        public void SubmitNickname()
         {
-            foreach (Transform row in _tableUI)
-            {
-                Destroy(row.gameObject);
-            }
+            PlayFabManager.OperationsManager.SubmitNickname(EnteredNickname.text);
+        }
 
-            foreach (var row in table)
-            {
-                Transform newRow = Instantiate(_rowUI, _tableUI);
-                TextMeshProUGUI[] columns = newRow.GetComponentsInChildren<TextMeshProUGUI>();
-                columns[0].text = (row.Position + 1).ToString();
-                columns[1].text = row.DisplayName;
-                columns[2].text = row.StatValue.ToString();
-            }
+        public void GetLeaderboard()
+        {
+            PlayFabManager.OperationsManager.GetLeaderboard();
         }
         
         public void TryAvoidError()
         {
-            PlayFabManager.Instance.RepeatServerActions();
+            PlayFabManager.OperationsManager.RepeatServerActions();
         }
 
         private void ShowStartingMenu(GameStartingScreenType startingScreenType)
@@ -112,10 +115,28 @@ namespace Core.UI
             _mainMenuInterface.gameObject.SetActive(true);
         }
 
-        private void ShowLeaderboard()
+        private void ShowLeaderboard(List<PlayerLeaderboardEntry> table)
         {
+            UpdateLeaderboard(table);
             _loadingScreen.gameObject.SetActive(false);
             _leaderboardInterface.gameObject.SetActive(true);
+        }
+        
+        private void UpdateLeaderboard(List<PlayerLeaderboardEntry> table)
+        {
+            foreach (Transform row in _tableUI)
+            {
+                Destroy(row.gameObject);
+            }
+
+            foreach (var row in table)
+            {
+                Transform newRow = Instantiate(_rowUI, _tableUI);
+                TextMeshProUGUI[] columns = newRow.GetComponentsInChildren<TextMeshProUGUI>();
+                columns[0].text = (row.Position + 1).ToString();
+                columns[1].text = row.DisplayName;
+                columns[2].text = row.StatValue.ToString();
+            }
         }
         
         private void ShowNicknameErrorMessage()
