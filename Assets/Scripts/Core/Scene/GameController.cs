@@ -34,11 +34,10 @@ namespace Core.Scene
         [SerializeField] private int _startingMoneyAmount;
         
         [Header("UI")] 
-        [SerializeField] private Transform _userInterface;
+        /*[SerializeField] private Transform _userInterface;
         [SerializeField] private Transform _loadingScreen;
-        [SerializeField] private LayerMask _viewUIMask;
-        [SerializeField] private GameSessionMenuUIController _gameUIController;
-        [SerializeField] private WarehouseInventoryController _warehouseInventoryController;
+        [SerializeField] private LayerMask _viewUIMask;*/
+        [SerializeField] private GameSessionMenuUIPresenter _gameUIPresenter;
         
         [Header("Map Camera")]
         [SerializeField] private Camera _cam;
@@ -53,11 +52,12 @@ namespace Core.Scene
         [SerializeField] private CarsStorage _carsStorage;
 
         [Header("Warehousing System")] 
+        [SerializeField] private WarehouseInventoryController _warehouseInventoryController;
         [SerializeField] private WarehousesStorage _warehousesStorage;
         
-        [Header("Post-Process")]
+        /*[Header("Post-Process")]
         [SerializeField] private PostProcessVolume _postProcessVolume;
-        [SerializeField] private PostProcessLayer _postProcessLayer;
+        [SerializeField] private PostProcessLayer _postProcessLayer;*/
 
         private PlayerAccountController _playerAccount;
         private ProjectUpdater _projectUpdater;
@@ -66,16 +66,13 @@ namespace Core.Scene
         private PathDrawer _pathDrawer;
         private CarSystem _carsSystem;
         private WarehouseScene[] _warehousesBehaviours;
-        private List<Button[]> _stopButtonsLayers;
-        private List<Transform> _openedUIWindows;
+        /*private List<Button[]> _stopButtonsLayers;*/
+        /*private List<Transform> _openedUIWindows;*/
         private List<IDisposable> _disposables;
     
     
         private void Awake()
         {
-            _playerAccount = new PlayerAccountController(PlayFabManager.OperationsManager.ReceivedPlayerAccountNickname, _startingMoneyAmount);
-            _gameUIController.Initialize(_playerAccount);
-            
             _disposables = new List<IDisposable>();
 
             if (ProjectUpdater.Instance == null)
@@ -89,7 +86,7 @@ namespace Core.Scene
                 if (_projectUpdater != null) _projectUpdater.IsPaused = false;
             }
 
-            _openedUIWindows = new List<Transform>();
+            /*_openedUIWindows = new List<Transform>();*/
 
             _timerController = new TimerController(_timeInMinutes, _currentTimeText);
             _disposables.Add(_timerController);
@@ -104,7 +101,7 @@ namespace Core.Scene
             _disposables.Add(_pathDrawer);
             
             _warehouseInventoryController.Initialize(carDescriptors, _pathDrawer);
-            _stopButtonsLayers = new List<Button[]>();
+            /*_stopButtonsLayers = new List<Button[]>();*/
             
             _warehousesBehaviours = FindObjectsOfType<WarehouseScene>();
             foreach (var warehouseBehaviour in _warehousesBehaviours)
@@ -120,24 +117,31 @@ namespace Core.Scene
         {
             _mapCameraController = new MapCameraController(_cam, _zoomStep, _minCamSize, _mapRenderer);
             _disposables.Add(_mapCameraController);
+            
+            _playerAccount = new PlayerAccountController(_gameUIPresenter.EnteredNickname, _startingMoneyAmount);
+            _gameUIPresenter.Initialize(_playerAccount);
+            _gameUIPresenter.LoadingScreenShown += PauseGame;
+            _gameUIPresenter.LoadingScreenHidden += UnPauseGame;
 
-            QuestionUIController.Instance.QuestionAppeared += PauseInterface;
+            /*QuestionUIController.Instance.QuestionAppeared += PauseInterface;
             QuestionUIController.Instance.QuestionDisappeared += UnPauseInterface;
             DialogUIController.Instance.DialogAppeared += PauseInterface;
             DialogUIController.Instance.DialogDisappeared += UnPauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared += PauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;*/
         }
         
         private void OnDestroy()
         {
+            _gameUIPresenter.LoadingScreenShown -= PauseGame;
+            _gameUIPresenter.LoadingScreenHidden -= UnPauseGame;
             _timerController.TimeExpired -= FinishGame;
-            QuestionUIController.Instance.QuestionAppeared -= PauseInterface;
+            /*QuestionUIController.Instance.QuestionAppeared -= PauseInterface;
             QuestionUIController.Instance.QuestionDisappeared -= UnPauseInterface;
             DialogUIController.Instance.DialogAppeared -= PauseInterface;
             DialogUIController.Instance.DialogDisappeared -= UnPauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= PauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= UnPauseInterface;
+            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= UnPauseInterface;*/
             
             foreach (var disposable in _disposables)
             {
@@ -145,30 +149,30 @@ namespace Core.Scene
             }
         }
 
-        public void PauseGame()
+        private void PauseGame()
         {
             _projectUpdater.IsPaused = true;
-            
-            foreach (Transform windowUI in _userInterface)
+            _gameUIPresenter.HideInterface();
+            /*foreach (Transform windowUI in _userInterface)
             {
                 if (!windowUI.gameObject.activeSelf) continue;
                 _openedUIWindows.Add(windowUI);
                 windowUI.gameObject.SetActive(false);
-            }
+            }*/
         }
 
-        public void UnPauseGame()
+        private void UnPauseGame()
         {
             _projectUpdater.IsPaused = false;
-            
-            foreach (var windowUI in _openedUIWindows)
+            _gameUIPresenter.ShowHiddenInterface();
+            /*foreach (var windowUI in _openedUIWindows)
             {
                 windowUI.gameObject.SetActive(true);
             }
-            _openedUIWindows.Clear();
+            _openedUIWindows.Clear();*/
         }
 
-        private void PauseInterface()
+        /*private void PauseInterface()
         {
             Button[] newButtonsLayer = FindObjectsOfType<Button>();
             foreach (var buttonsLayer in _stopButtonsLayers)
@@ -193,15 +197,16 @@ namespace Core.Scene
                 button.interactable = true;
             }
             _stopButtonsLayers.Remove(lastButtonLayer);
-        }
+        }*/
 
         private void FinishGame()
         {
             PauseGame();
-            _loadingScreen.gameObject.SetActive(true);
+            _gameUIPresenter.FinishGame();
+            /*_loadingScreen.gameObject.SetActive(true);
             _postProcessVolume.enabled = true;
-            _postProcessLayer.enabled = true;
-            PlayFabManager.OperationsManager.UpdateLeaderboard(250000);
+            _postProcessLayer.enabled = true;*/
+            /*PlayFabService.OperationsManager.UpdateLeaderboard(250000);*/
         }
     }
 }

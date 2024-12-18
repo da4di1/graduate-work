@@ -2,7 +2,7 @@
 {
     public interface IPlayFabOperationsManager
     {
-        string ReceivedPlayerAccountNickname { get; }
+        string PlayerAccountNickname { get; }
         void SubmitNickname(string nickname);
         void GetLeaderboard();
         void UpdateLeaderboard(int statValue);
