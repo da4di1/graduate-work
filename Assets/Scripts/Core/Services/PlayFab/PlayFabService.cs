@@ -9,15 +9,9 @@ namespace Core.Services.PlayFab
 {
     public class PlayFabService
     {
-        /*public static IPlayFabEventsManager EventsManager { get; private set; }
-        public static IPlayFabOperationsManager OperationsManager { get; private set; }*/
-
-        /*private bool _isLoginErrorOccuring;
-        private bool _isLoginUpdatingNicknameErrorOccuring;
-        private bool _isUpdatingLeaderboardErrorOccuring;
-        private bool _isGettingLeaderboardErrorOccuring;*/
         private int _statValue;
         private bool _isOldSessionExpired;
+        private string _suggestedAccountNickname;
         private PlayFabErrorType _currentErrorType;
         
         public string PlayerAccountNickname { get; private set; }
@@ -31,20 +25,14 @@ namespace Core.Services.PlayFab
         public event Action ErrorOccured;
         
         
-        public PlayFabService()
+        public void Initialize()
         {
-            /*if (EventsManager != null || OperationsManager != null) return;
-            EventsManager = this;
-            OperationsManager = this;#1#
-            
-            /*
-            Login();#1#*/
-            
             GetAccountInfo();
         }
         
         public void SubmitNickname(string nickname)
         {
+            _suggestedAccountNickname = nickname;
             var request = new UpdateUserTitleDisplayNameRequest
             {
                 DisplayName = nickname,
@@ -91,7 +79,7 @@ namespace Core.Services.PlayFab
                     Login();
                     break;
                 case PlayFabErrorType.UpdatingNicknameError:
-                    SubmitNickname(PlayerAccountNickname);
+                    SubmitNickname(_suggestedAccountNickname);
                     break;
                 case PlayFabErrorType.GettingLeaderboardError:
                     GetLeaderboard();
@@ -103,10 +91,6 @@ namespace Core.Services.PlayFab
                 default:
                     break;
             }
-            /*if (_isLoginErrorOccuring) Login();
-            if (_isUpdatingLeaderboardErrorOccuring) UpdateLeaderboard(_statValue);
-            if (_isGettingLeaderboardErrorOccuring) GetLeaderboard();
-            if (_isLoginUpdatingNicknameErrorOccuring) SubmitNickname(ReceivedPlayerAccountNickname);*/
         }
 
         private void GetAccountInfo()
@@ -159,7 +143,6 @@ namespace Core.Services.PlayFab
             {
                 SuccessfullyLogged?.Invoke(PlayerAccountNickname == null ? GameStartingScreenType.EnteringNicknameWindow : GameStartingScreenType.MainMenu);
                 _currentErrorType = PlayFabErrorType.None;
-                /*_isLoginErrorOccuring = false;*/
             }
         }
 
@@ -170,7 +153,6 @@ namespace Core.Services.PlayFab
             Debug.Log("Player`s nickname has been saved!");
             NicknameSubmitted?.Invoke();
             _currentErrorType = PlayFabErrorType.None;
-            /*_isLoginUpdatingNicknameErrorOccuring = false;*/
         }
         
         private void OnLeaderboardReceived(GetLeaderboardResult result)
@@ -178,7 +160,6 @@ namespace Core.Services.PlayFab
             Debug.Log("Leaderboard has been successfully received from server!");
             LeaderboardReceived?.Invoke(result.Leaderboard);
             _currentErrorType = PlayFabErrorType.None;
-            /*_isGettingLeaderboardErrorOccuring = false;*/
         }
         
         private void OnLeaderboardUpdated(UpdatePlayerStatisticsResult result)
@@ -186,7 +167,6 @@ namespace Core.Services.PlayFab
             Debug.Log("Leaderboard successfully updated!");
             LeaderboardUpdated?.Invoke();
             _currentErrorType = PlayFabErrorType.None;
-            /*_isUpdatingLeaderboardErrorOccuring = false;*/
         }
 
         private void OnGettingAccountInfoErrorOccured(PlayFabError error)
@@ -199,7 +179,6 @@ namespace Core.Services.PlayFab
         {
             _currentErrorType = PlayFabErrorType.LoginError;
             OnErrorOccured(error);
-            /*_isLoginErrorOccuring = true;*/
         }
 
         private void OnSubmittingNicknameErrorOccured(PlayFabError error)
@@ -212,7 +191,6 @@ namespace Core.Services.PlayFab
             {
                 _currentErrorType = PlayFabErrorType.UpdatingNicknameError;
                 OnErrorOccured(error);
-                /*_isLoginUpdatingNicknameErrorOccuring = true;*/
             }
         }
         
@@ -220,14 +198,12 @@ namespace Core.Services.PlayFab
         {
             _currentErrorType = PlayFabErrorType.GettingLeaderboardError;
             OnErrorOccured(error);
-            /*_isGettingLeaderboardErrorOccuring = true;*/
         }
         
         private void OnUpdateLeaderboardErrorOccured(PlayFabError error)
         {
             _currentErrorType = PlayFabErrorType.UpdatingLeaderboardError;
             OnErrorOccured(error);
-            /*_isUpdatingLeaderboardErrorOccuring = true;*/
         }
         
         private void OnErrorOccured(PlayFabError error)

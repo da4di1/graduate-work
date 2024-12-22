@@ -12,7 +12,7 @@ namespace Core.Timer
 
         public event Action TimeExpired;
         
-        public TimerController(int timeInMinutes, TextMeshProUGUI currentTimeText)
+        public TimerController(float timeInMinutes, TextMeshProUGUI currentTimeText)
         {
             _currentTimeText = currentTimeText;
             _currentTime = timeInMinutes * 60;

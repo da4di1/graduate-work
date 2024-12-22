@@ -32,6 +32,12 @@ namespace Core.UI.WarehouseInventory
 
         public event Action Closed;
 
+        
+        private void OnDestroy()
+        {
+            RemoveButtonsListeners();
+        }
+        
         public void Initialize(WarehouseEntity warehouseEntity, List<CarDescriptor> carsTypesDescriptors, PathDrawer pathDrawer)
         {
             _pathDrawer = pathDrawer;
@@ -71,16 +77,11 @@ namespace Core.UI.WarehouseInventory
                 });
             }
             
-            _closeButton.onClick.AddListener(() =>
-            {
-                Hide();
-                RemoveButtonsListeners();
-            });
+            _closeButton.onClick.AddListener(Hide);
             _startCarButton.onClick.AddListener(() =>
             {
                 Hide();
                 _pathDrawer.StartDrawingPath();
-                RemoveButtonsListeners();
                 Closed?.Invoke();
             });
             
@@ -89,11 +90,17 @@ namespace Core.UI.WarehouseInventory
         private void Hide()
         {
             gameObject.SetActive(false);
+            RemoveButtonsListeners();
         }
 
         private void RemoveButtonsListeners()
         {
             _closeButton.onClick.RemoveAllListeners();
+            _startCarButton.onClick.RemoveAllListeners();
+            foreach (var carUI in _carsUI)
+            {
+                carUI.PickButton.onClick.RemoveAllListeners();
+            }
         }
         
         

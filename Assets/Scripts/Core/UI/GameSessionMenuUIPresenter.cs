@@ -40,7 +40,6 @@ namespace Core.UI
         {
             _stopButtonsLayers = new List<Button[]>();
             _openedUIWindows = new List<Transform>();
-            /*_loadingScreen.gameObject.SetActive(true);*/
             _playFabService = new PlayFabService();
 
             _playFabService.AccountInfoReceived += HideLoadingScreen;
@@ -56,8 +55,6 @@ namespace Core.UI
             DialogUIController.Instance.DialogDisappeared += UnPauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared += PauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;
-            
-            ShowLoadingScreen();
         }
 
         private void OnDestroy()
@@ -77,6 +74,8 @@ namespace Core.UI
         public void Initialize(IPlayerInformation playerInformation)
         {
             _playerInformation = playerInformation;
+            ShowLoadingScreen();
+            _playFabService.Initialize();
         }
         
         public void RestartGame()
@@ -136,23 +135,23 @@ namespace Core.UI
         public void FinishGame()
         {
             ShowLoadingScreen();
-            _playFabService.UpdateLeaderboard(250000);
+            _playFabService.UpdateLeaderboard(300000);
         }
 
         private void ShowLoadingScreen()
         {
+            LoadingScreenShown?.Invoke();
             _loadingScreen.gameObject.SetActive(true);
             _postProcessVolume.enabled = true;
             _postProcessLayer.enabled = true;
-            LoadingScreenShown?.Invoke();
         }
 
         private void HideLoadingScreen()
         {
+            LoadingScreenHidden?.Invoke();
             _loadingScreen.gameObject.SetActive(false);
             _postProcessVolume.enabled = false;
             _postProcessLayer.enabled = false;
-            LoadingScreenHidden?.Invoke();
         }
 
         private void ShowGameOverScreen()

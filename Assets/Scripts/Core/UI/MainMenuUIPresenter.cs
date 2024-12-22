@@ -30,23 +30,8 @@ namespace Core.UI
         [field: SerializeField] public TMP_InputField EnteredNickname { get; private set; }
         
         
-        /*private void Awake()
-        {
-            _loadingScreen.gameObject.SetActive(true);
-            /*if (PlayFabService.EventsManager == null && PlayFabService.OperationsManager == null)
-            {
-                PlayFabService playFabService = new PlayFabService();
-            }#1#
-            /*else
-            {
-                _loadingScreen.gameObject.SetActive(false);
-                _mainMenuInterface.gameObject.SetActive(true);
-            }#1#
-        }*/
-
         private void Awake()
         {
-            _loadingScreen.gameObject.SetActive(true);
             _playFabService = new PlayFabService();
             
             _playFabService.AccountInfoReceived += ShowMainMenu;
@@ -56,7 +41,13 @@ namespace Core.UI
             _playFabService.NotAvailableNicknameErrorOccured += ShowNicknameErrorMessage;
             _playFabService.ErrorOccured += ShowErrorMessage;
         }
-
+        
+        private void Start()
+        {
+            _loadingScreen.gameObject.SetActive(true);
+            _playFabService.Initialize();
+        }
+        
         private void OnDestroy()
         {
             _playFabService.AccountInfoReceived -= ShowMainMenu;
