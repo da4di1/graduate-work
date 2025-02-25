@@ -101,15 +101,15 @@ namespace Core.Scene
             _disposables.Add(_mapCameraController);
             
             _playerAccount = new PlayerAccountController(_gameUIPresenter.EnteredNickname, _startingMoneyAmount);
-            _gameUIPresenter.LoadingScreenShown += PauseGame;
-            _gameUIPresenter.LoadingScreenHidden += UnPauseGame;
+            _gameUIPresenter.GameUIHidden += PauseGame;
+            _gameUIPresenter.GameUIShown += UnPauseGame;
             _gameUIPresenter.Initialize(_playerAccount);
         }
         
         private void OnDestroy()
         {
-            _gameUIPresenter.LoadingScreenShown -= PauseGame;
-            _gameUIPresenter.LoadingScreenHidden -= UnPauseGame;
+            _gameUIPresenter.GameUIHidden -= PauseGame;
+            _gameUIPresenter.GameUIShown -= UnPauseGame;
             _timerController.TimeExpired -= FinishGame;
             
             foreach (var disposable in _disposables)
@@ -118,21 +118,18 @@ namespace Core.Scene
             }
         }
 
-        public void PauseGame()
+        private void PauseGame()
         {
             _projectUpdater.IsPaused = true;
-            _gameUIPresenter.HideInterface();
         }
 
-        public void UnPauseGame()
+        private void UnPauseGame()
         {
             _projectUpdater.IsPaused = false;
-            _gameUIPresenter.ShowHiddenInterface();
         }
 
         private void FinishGame()
         {
-            PauseGame();
             _gameUIPresenter.FinishGame();
         }
     }

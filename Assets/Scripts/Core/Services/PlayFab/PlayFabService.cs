@@ -17,7 +17,6 @@ namespace Core.Services.PlayFab
         public string PlayerAccountNickname { get; private set; }
         
         public event Action AccountInfoReceived;
-        public event Action<GameStartingScreenType> SuccessfullyLogged;
         public event Action NicknameSubmitted;
         public event Action<List<PlayerLeaderboardEntry>> LeaderboardReceived;
         public event Action LeaderboardUpdated;
@@ -27,7 +26,7 @@ namespace Core.Services.PlayFab
         
         public void Initialize()
         {
-            GetAccountInfo();
+            CheckLoggingStatus();
         }
         
         public void SubmitNickname(string nickname)
@@ -72,11 +71,11 @@ namespace Core.Services.PlayFab
         {
             switch (_currentErrorType)
             {
-                case PlayFabErrorType.GeetingAccountInfoError:
+                case PlayFabErrorType.GettingAccountInfoError:
                     GetAccountInfo();
                     break;
                 case PlayFabErrorType.LoginError:
-                    Login();
+                    LogIn();
                     break;
                 case PlayFabErrorType.UpdatingNicknameError:
                     SubmitNickname(_suggestedAccountNickname);
@@ -93,47 +92,46 @@ namespace Core.Services.PlayFab
             }
         }
 
-        private void GetAccountInfo()
+        private void CheckLoggingStatus()
         {
             if (PlayFabClientAPI.IsClientLoggedIn())
             {
-                var request = new GetAccountInfoRequest();
-                PlayFabClientAPI.GetAccountInfo(request, OnAccountInfoReceived, OnGettingAccountInfoErrorOccured);
+                GetAccountInfo();
             }
             else
             {
-                Login();
+                LogIn();
             }
         }
+
+        private void GetAccountInfo()
+        {
+            var request = new GetAccountInfoRequest();
+            PlayFabClientAPI.GetAccountInfo(request, OnAccountInfoReceived, OnGettingAccountInfoErrorOccured);
+        }
         
-        private void Login()
+        private void LogIn()
         {
             var request = new LoginWithCustomIDRequest
             {
                 CustomId = SystemInfo.deviceUniqueIdentifier,
                 CreateAccount = true,
-                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
-                {
-                    GetPlayerProfile = true,
-                }
             };
             PlayFabClientAPI.LoginWithCustomID(request, OnSuccessfullyLogged, OnLoginErrorOccured);
         }
 
         private void OnAccountInfoReceived(GetAccountInfoResult result)
         {
-            PlayerAccountNickname = result.AccountInfo.TitleInfo.DisplayName;
+            PlayerAccountNickname = null;
+            if (result.AccountInfo.TitleInfo != null) PlayerAccountNickname = result.AccountInfo.TitleInfo.DisplayName;
             
             Debug.Log("Player`s info has been received!");
-            AccountInfoReceived?.Invoke();
             _currentErrorType = PlayFabErrorType.None;
+            AccountInfoReceived?.Invoke();
         }
         
         private void OnSuccessfullyLogged(LoginResult result)
         {
-            PlayerAccountNickname = null;
-            if (result.InfoResultPayload.PlayerProfile != null) PlayerAccountNickname = result.InfoResultPayload.PlayerProfile.DisplayName;
-
             Debug.Log("Account successfully logged-in/created!");
             if (_isOldSessionExpired)
             {
@@ -141,8 +139,8 @@ namespace Core.Services.PlayFab
             }
             else
             {
-                SuccessfullyLogged?.Invoke(PlayerAccountNickname == null ? GameStartingScreenType.EnteringNicknameWindow : GameStartingScreenType.MainMenu);
                 _currentErrorType = PlayFabErrorType.None;
+                GetAccountInfo();
             }
         }
 
@@ -151,33 +149,33 @@ namespace Core.Services.PlayFab
             PlayerAccountNickname = result.DisplayName;
             
             Debug.Log("Player`s nickname has been saved!");
-            NicknameSubmitted?.Invoke();
             _currentErrorType = PlayFabErrorType.None;
+            NicknameSubmitted?.Invoke();
         }
         
         private void OnLeaderboardReceived(GetLeaderboardResult result)
         {
             Debug.Log("Leaderboard has been successfully received from server!");
-            LeaderboardReceived?.Invoke(result.Leaderboard);
             _currentErrorType = PlayFabErrorType.None;
+            LeaderboardReceived?.Invoke(result.Leaderboard);
         }
         
         private void OnLeaderboardUpdated(UpdatePlayerStatisticsResult result)
         {
             Debug.Log("Leaderboard successfully updated!");
-            LeaderboardUpdated?.Invoke();
             _currentErrorType = PlayFabErrorType.None;
+            LeaderboardUpdated?.Invoke();
         }
 
         private void OnGettingAccountInfoErrorOccured(PlayFabError error)
         {
-            _currentErrorType = PlayFabErrorType.GeetingAccountInfoError;
+            _currentErrorType = PlayFabErrorType.GettingAccountInfoError;
             OnErrorOccured(error);
         }
 
         private void OnLoginErrorOccured(PlayFabError error)
         {
-            _currentErrorType = PlayFabErrorType.LoginError;
+            if (!_isOldSessionExpired) _currentErrorType = PlayFabErrorType.LoginError;
             OnErrorOccured(error);
         }
 
@@ -211,7 +209,7 @@ namespace Core.Services.PlayFab
             if (error.Error == PlayFabErrorCode.InvalidSessionTicket)
             {
                 _isOldSessionExpired = true;
-                Login();
+                LogIn();
                 RepeatServerActions();
             }
             else

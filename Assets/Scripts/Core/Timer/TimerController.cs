@@ -27,7 +27,6 @@ namespace Core.Timer
 
         private void OnUpdate()
         {
-            if (ProjectUpdater.Instance.IsPaused) return;
             _currentTime -= Time.deltaTime;
             if (_currentTime <= 0)
             {

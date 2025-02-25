@@ -32,8 +32,8 @@ namespace Core.UI
 
         public string EnteredNickname => _playFabService.PlayerAccountNickname;
         
-        public event Action LoadingScreenShown;
-        public event Action LoadingScreenHidden;
+        public event Action GameUIHidden;
+        public event Action GameUIShown;
         
         
         private void Awake()
@@ -121,6 +121,7 @@ namespace Core.UI
                 _openedUIWindows.Add(windowUI);
                 windowUI.gameObject.SetActive(false);
             }
+            GameUIHidden?.Invoke();
         }
 
         public void ShowHiddenInterface()
@@ -130,6 +131,7 @@ namespace Core.UI
                 windowUI.gameObject.SetActive(true);
             }
             _openedUIWindows.Clear();
+            GameUIShown?.Invoke();
         }
 
         public void FinishGame()
@@ -140,7 +142,7 @@ namespace Core.UI
 
         private void ShowLoadingScreen()
         {
-            LoadingScreenShown?.Invoke();
+            HideInterface();
             _loadingScreen.gameObject.SetActive(true);
             _postProcessVolume.enabled = true;
             _postProcessLayer.enabled = true;
@@ -148,7 +150,7 @@ namespace Core.UI
 
         private void HideLoadingScreen()
         {
-            LoadingScreenHidden?.Invoke();
+            ShowHiddenInterface();
             _loadingScreen.gameObject.SetActive(false);
             _postProcessVolume.enabled = false;
             _postProcessLayer.enabled = false;
@@ -176,7 +178,7 @@ namespace Core.UI
             _stopButtonsLayers.Add(newButtonsLayer);
             foreach (var button in newButtonsLayer)
             {
-                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue;
+                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue; //checking if button layer included in layer mask
                 button.interactable = false;
             }
         }
@@ -187,7 +189,7 @@ namespace Core.UI
             if (lastButtonLayer == null) return;
             foreach (var button in lastButtonLayer)
             {
-                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue;
+                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue; //checking if button layer included in layer mask
                 button.interactable = true;
             }
             _stopButtonsLayers.Remove(lastButtonLayer);

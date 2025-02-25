@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Core.Enums;
 using Core.Services.PlayFab;
 using PlayFab.ClientModels;
 using TMPro;
@@ -34,8 +33,7 @@ namespace Core.UI
         {
             _playFabService = new PlayFabService();
             
-            _playFabService.AccountInfoReceived += ShowMainMenu;
-            _playFabService.SuccessfullyLogged += ShowStartingMenu;
+            _playFabService.AccountInfoReceived += ShowStartingMenu;
             _playFabService.NicknameSubmitted += ShowMainMenu;
             _playFabService.LeaderboardReceived += ShowLeaderboard;
             _playFabService.NotAvailableNicknameErrorOccured += ShowNicknameErrorMessage;
@@ -50,8 +48,7 @@ namespace Core.UI
         
         private void OnDestroy()
         {
-            _playFabService.AccountInfoReceived -= ShowMainMenu;
-            _playFabService.SuccessfullyLogged -= ShowStartingMenu;
+            _playFabService.AccountInfoReceived -= ShowStartingMenu;
             _playFabService.NicknameSubmitted -= ShowMainMenu;
             _playFabService.LeaderboardReceived -= ShowLeaderboard;
             _playFabService.NotAvailableNicknameErrorOccured -= ShowNicknameErrorMessage;
@@ -92,17 +89,16 @@ namespace Core.UI
             _playFabService.RepeatServerActions();
         }
 
-        private void ShowStartingMenu(GameStartingScreenType startingScreenType)
+        private void ShowStartingMenu()
         {
             _loadingScreen.gameObject.SetActive(false);
-            switch (startingScreenType)
+            if (_playFabService.PlayerAccountNickname == null)
             {
-                case GameStartingScreenType.EnteringNicknameWindow:
-                    _enteringNicknameWindow.gameObject.SetActive(true);
-                    break;
-                case GameStartingScreenType.MainMenu:
-                    _mainMenuInterface.gameObject.SetActive(true);
-                    break;
+                _enteringNicknameWindow.gameObject.SetActive(true);
+            }
+            else
+            {
+                _mainMenuInterface.gameObject.SetActive(true);
             }
         }
 
