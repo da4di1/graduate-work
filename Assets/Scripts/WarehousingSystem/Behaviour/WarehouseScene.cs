@@ -1,6 +1,5 @@
 ﻿using Core.Services.Updater;
-using Core.UI.DialogUI;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
 using UnityEngine;
 using WarehousingSystem.Enums;
@@ -25,18 +24,18 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseEnter()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || 
                 WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             _selectionBgSprite.enabled = true;
         }
 
         private void OnMouseExit()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || 
                 WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown)
             {
-                QuestionUIController.Instance.QuestionDisappeared += TurnBackgroundOff;
-                DialogUIController.Instance.DialogDisappeared += TurnBackgroundOff;
+                Debug.Log("1");
+                ModalUIController.Instance.ModalUIDisappeared += TurnBackgroundOff;
                 WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += TurnBackgroundOff;
             }
             else
@@ -47,7 +46,7 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseDown()
         {
-            if (ProjectUpdater.Instance.IsPaused || QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || 
                 WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             Clicked = true;
         }
@@ -84,8 +83,8 @@ namespace WarehousingSystem.Behaviour
         private void TurnBackgroundOff()
         {
             _selectionBgSprite.enabled = false;
-            QuestionUIController.Instance.QuestionDisappeared -= TurnBackgroundOff;
-            DialogUIController.Instance.DialogDisappeared -= TurnBackgroundOff;
+            Debug.Log("2");
+            ModalUIController.Instance.ModalUIDisappeared -= TurnBackgroundOff;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= TurnBackgroundOff;
         }
     }

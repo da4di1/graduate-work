@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CarsSystem.Data;
 using CarsSystem.Enums;
-using Core.UI.DialogUI;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using PathBuilding;
 using TMPro;
 using UnityEngine;
@@ -76,12 +75,12 @@ namespace Core.UI.WarehouseInventory
             });
             _sellButton.onClick.AddListener(() =>
             {
-                QuestionUIController.Instance.ShowQuestion($"Do you want to sell this warehouse for {_warehouseEntity.Descriptor.SalePrice}?",
+                ModalUIController.Instance.Question.Show($"Do you want to sell this warehouse for {_warehouseEntity.Descriptor.SalePrice}?",
                     () =>
                     {
                         if (_warehouseEntity.GetCarsAmount() > 0)
                         {
-                            DialogUIController.Instance.ShowDialog("Firstly you must sell all the cars in the warehouse!", null);
+                            ModalUIController.Instance.Dialog.Show("Firstly you must sell all the cars in the warehouse!", null);
                         }
                         else
                         {
@@ -100,7 +99,7 @@ namespace Core.UI.WarehouseInventory
                 }
                 else
                 {
-                    DialogUIController.Instance.ShowDialog("You must have at least one car for this process!", null);
+                    ModalUIController.Instance.Dialog.Show("You must have at least one car for this process!", null);
                 }
             });
         }
@@ -116,9 +115,9 @@ namespace Core.UI.WarehouseInventory
                 if (carTypeDescriptor == null) continue;
                 carUI.BuyButton.onClick.AddListener(() =>
                 {
-                    QuestionUIController.Instance.ShowQuestion($"Do you want to buy this car for {carTypeDescriptor.Cost}?\n" +
-                                                               $"Speed: {carTypeDescriptor.Speed} km/h\n" +
-                                                               $"Capacity {carTypeDescriptor.Capacity} kg", () =>
+                    ModalUIController.Instance.Question.Show($"Do you want to buy this car for {carTypeDescriptor.Cost}?\n" +
+                                                             $"Speed: {carTypeDescriptor.Speed} km/h\n" +
+                                                             $"Capacity {carTypeDescriptor.Capacity} kg", () =>
                     {
                         _warehouseEntity.BuyCar(carUI.CarType);
                         carUI.Amount.text = _warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
@@ -126,9 +125,9 @@ namespace Core.UI.WarehouseInventory
                 });
                 carUI.SellButton.onClick.AddListener(() =>
                 {
-                    QuestionUIController.Instance.ShowQuestion($"Do you want to sell this car for {carTypeDescriptor.SalePrice}?\n" +
-                                                               $"Speed: {carTypeDescriptor.Speed} km/h\n" +
-                                                               $"Capacity {carTypeDescriptor.Capacity} kg", () =>
+                    ModalUIController.Instance.Question.Show($"Do you want to sell this car for {carTypeDescriptor.SalePrice}?\n" +
+                                                             $"Speed: {carTypeDescriptor.Speed} km/h\n" +
+                                                             $"Capacity {carTypeDescriptor.Capacity} kg", () =>
                     {
                         _warehouseEntity.SellCar(carUI.CarType);
                         carUI.Amount.text = _warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();

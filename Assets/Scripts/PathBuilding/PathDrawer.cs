@@ -4,7 +4,7 @@ using System.Linq;
 using CarsSystem;
 using CarsSystem.Enums;
 using Core.Services.Updater;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -138,7 +138,7 @@ namespace PathBuilding
                     if (currentPoint.IsEndingPoint)
                     {
                         _hasQuestionAppeared = true;
-                        QuestionUIController.Instance.ShowQuestion("Do you want to finish path building?", () =>
+                        ModalUIController.Instance.Question.Show("Do you want to finish path building?", () =>
                         {
                             _hasQuestionAppeared = false;
                             _builtPath.Add(currentPoint);

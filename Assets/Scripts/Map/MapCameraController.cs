@@ -1,7 +1,6 @@
 using System;
 using Core.Services.Updater;
-using Core.UI.DialogUI;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -37,10 +36,8 @@ namespace Map
             _mapMinY = mapRenderer.bounds.center.y - mapRenderer.bounds.size.y / 2f;
             _mapMaxY = mapRenderer.bounds.center.y + mapRenderer.bounds.size.y / 2f - 1f;
 
-            QuestionUIController.Instance.QuestionAppeared += StopCamera;
-            QuestionUIController.Instance.QuestionDisappeared += StartCameraMovement;
-            DialogUIController.Instance.DialogAppeared += StopCamera;
-            DialogUIController.Instance.DialogDisappeared += StartCameraMovement;
+            ModalUIController.Instance.ModalUIAppeared += StopCamera;
+            ModalUIController.Instance.ModalUIDisappeared += StartCameraMovement;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared += StopCamera;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += StartCameraMovement;
             StartCameraMovement();
@@ -48,10 +45,8 @@ namespace Map
 
         public void Dispose()
         {
-            QuestionUIController.Instance.QuestionAppeared -= StopCamera;
-            QuestionUIController.Instance.QuestionDisappeared -= StartCameraMovement;
-            DialogUIController.Instance.DialogAppeared -= StopCamera;
-            DialogUIController.Instance.DialogDisappeared -= StartCameraMovement;
+            ModalUIController.Instance.ModalUIAppeared -= StopCamera;
+            ModalUIController.Instance.ModalUIDisappeared -= StartCameraMovement;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= StopCamera;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= StartCameraMovement;
             StopCamera();
@@ -112,15 +107,13 @@ namespace Map
 
         private void StartCameraMovement()
         {
-            if (QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
-                WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
+            if (ModalUIController.Instance.IsModalUIShown || WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             ProjectUpdater.Instance.UpdateCalled += OnUpdate;
         }
 
         private void StopCamera()
         {
-            if (QuestionUIController.Instance.IsQuestionUIShown || DialogUIController.Instance.IsDialogUIShown || 
-                WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
+            if (ModalUIController.Instance.IsModalUIShown || WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
             ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
     }

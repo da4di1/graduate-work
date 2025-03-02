@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Core.PlayerAccount.Interfaces;
 using Core.Services.PlayFab;
-using Core.UI.DialogUI;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
@@ -49,10 +48,8 @@ namespace Core.UI
 
         private void Start()
         {
-            QuestionUIController.Instance.QuestionAppeared += PauseInterface;
-            QuestionUIController.Instance.QuestionDisappeared += UnPauseInterface;
-            DialogUIController.Instance.DialogAppeared += PauseInterface;
-            DialogUIController.Instance.DialogDisappeared += UnPauseInterface;
+            ModalUIController.Instance.ModalUIAppeared += PauseInterface;
+            ModalUIController.Instance.ModalUIDisappeared += UnPauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared += PauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;
         }
@@ -63,10 +60,8 @@ namespace Core.UI
             _playFabService.LeaderboardUpdated -= ShowGameOverScreen;
             _playFabService.ErrorOccured -= ShowErrorMessage;
             
-            QuestionUIController.Instance.QuestionAppeared -= PauseInterface;
-            QuestionUIController.Instance.QuestionDisappeared -= UnPauseInterface;
-            DialogUIController.Instance.DialogAppeared -= PauseInterface;
-            DialogUIController.Instance.DialogDisappeared -= UnPauseInterface;
+            ModalUIController.Instance.ModalUIAppeared -= PauseInterface;
+            ModalUIController.Instance.ModalUIDisappeared -= UnPauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= PauseInterface;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= UnPauseInterface;
         }
@@ -98,14 +93,13 @@ namespace Core.UI
 
         public void ShowPlayerInformation()
         {
-            if (DialogUIController.Instance.IsDialogUIShown) return;
-            DialogUIController.Instance.ShowDialog($"PLAYER INFORMATION\n" +
-                                                   $"Nickname: {_playerInformation.NickName}\n" +
-                                                   $"Money: {_playerInformation.MoneyAmount}$\n" +
-                                                   $"Income: {_playerInformation.Income}$\n" +
-                                                   $"Warehouses: {_playerInformation.GetWarehousesAmount()}\n" +
-                                                   $"Cars: {_playerInformation.GetCarsAmount()}\n" +
-                                                   $"Active contracts: {_playerInformation.ActiveContractsAmount}", null);
+            ModalUIController.Instance.Dialog.Show($"PLAYER INFORMATION\n" +
+                                                     $"Nickname: {_playerInformation.NickName}\n" +
+                                                     $"Money: {_playerInformation.MoneyAmount}$\n" +
+                                                     $"Income: {_playerInformation.Income}$\n" +
+                                                     $"Warehouses: {_playerInformation.GetWarehousesAmount()}\n" +
+                                                     $"Cars: {_playerInformation.GetCarsAmount()}\n" +
+                                                     $"Active contracts: {_playerInformation.ActiveContractsAmount}", null);
         }
         
         public void TryAvoidError()
@@ -115,6 +109,9 @@ namespace Core.UI
 
         public void HideInterface()
         {
+            ModalUIController.Instance.Dialog.Hide();
+            ModalUIController.Instance.Question.Hide();
+            
             foreach (Transform windowUI in _userInterface)
             {
                 if (!windowUI.gameObject.activeSelf) continue;

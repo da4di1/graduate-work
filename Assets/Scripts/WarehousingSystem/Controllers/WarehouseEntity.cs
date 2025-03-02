@@ -6,8 +6,7 @@ using CarsSystem.Controllers;
 using CarsSystem.Enums;
 using CarsSystem.Interfaces;
 using Core.Services.Updater;
-using Core.UI.DialogUI;
-using Core.UI.QuestionUI;
+using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
 using PathBuilding;
 using UnityEngine;
@@ -62,7 +61,7 @@ namespace WarehousingSystem.Controllers
             ICarInformation carToSell = Cars.FirstOrDefault(car => car.Descriptor.CarType == carType);
             if (carToSell == null)
             {
-                DialogUIController.Instance.ShowDialog("You do not have any cars of this type!", null);
+                ModalUIController.Instance.Dialog.Show("You do not have any cars of this type!", null);
             }
             else
             {
@@ -82,7 +81,7 @@ namespace WarehousingSystem.Controllers
             {
                 if (_isPurchasable)
                 {
-                    QuestionUIController.Instance.ShowQuestion($"Do you want to buy this warehouse for {Descriptor.Cost}$?", () =>
+                    ModalUIController.Instance.Question.Show($"Do you want to buy this warehouse for {Descriptor.Cost}$?", () =>
                     {
                         _isPurchasable = false;
                         _warehouseBehaviour.GetPurchased();
