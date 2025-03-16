@@ -24,8 +24,6 @@ namespace Core.Services.Updater
         }
         
         public event Action UpdateCalled;
-        public event Action FixedUpdateCalled;
-        public event Action LateUpdateCalled;
         
 
         private void Awake()
@@ -47,22 +45,6 @@ namespace Core.Services.Updater
                 return;
             
             UpdateCalled?.Invoke();
-        }
-
-        private void FixedUpdate()
-        {
-            if (IsPaused)
-                return;
-            
-            FixedUpdateCalled?.Invoke();
-        }
-
-        private void LateUpdate()
-        {
-            if (IsPaused)
-                return;
-            
-            LateUpdateCalled?.Invoke();
         }
     }
 }

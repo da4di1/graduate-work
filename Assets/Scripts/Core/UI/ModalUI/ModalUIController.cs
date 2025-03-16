@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Core.UI.ModalUI.DialogUI;
-using Core.UI.ModalUI.QuestionUI;
+using Core.UI.ModalUI.ModalInterfaces;
 using UnityEngine;
 
 namespace Core.UI.ModalUI
@@ -38,8 +37,6 @@ namespace Core.UI.ModalUI
                 Dialog,
                 Question,
             };
-            
-            HideModalInterfaces();
         }
 
         private void Start()
@@ -70,14 +67,6 @@ namespace Core.UI.ModalUI
         {
             IsModalUIShown = false;
             ModalUIDisappeared?.Invoke();
-        }
-
-        private void HideModalInterfaces()
-        {
-            foreach (var modalUI in _modalInterfaces)
-            {
-                modalUI.Hide();
-            }
         }
     }
 }

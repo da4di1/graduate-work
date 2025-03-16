@@ -9,13 +9,11 @@ namespace WarehousingSystem.Behaviour
     [RequireComponent(typeof(BoxCollider2D))]
     public class WarehouseScene : MonoBehaviour
     {
-        private const string GreenColor = "#52C54A";
-        private const string BlueColor = "#284DE5";
-        private const string RedColor = "#C02024";
-        private const float TransparencyPercent = 0.15f;
-        
+        [SerializeField] private Color _forSaleColor;
+        [SerializeField] private Color _ownedColor;
         [SerializeField] private SpriteRenderer _iconSprite;
-        [SerializeField] private SpriteRenderer _selectionBgSprite;
+        [SerializeField] private SpriteRenderer _backgroundSprite;
+        [SerializeField] private float _backgroundTransparency;
         
         [field: SerializeField] public WarehouseId WarehouseId { get; private set; }
         
@@ -24,9 +22,9 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseEnter()
         {
-            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || 
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown ||
                 WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
-            _selectionBgSprite.enabled = true;
+            _backgroundSprite.enabled = true;
         }
 
         private void OnMouseExit()
@@ -40,7 +38,7 @@ namespace WarehousingSystem.Behaviour
             }
             else
             {
-                _selectionBgSprite.enabled = false;
+                _backgroundSprite.enabled = false;
             }
         }
 
@@ -58,31 +56,25 @@ namespace WarehousingSystem.Behaviour
 
         public void GetPurchased()
         {
-            if (ColorUtility.TryParseHtmlString(BlueColor, out Color colorToSet))
-            {
-                _iconSprite.color = colorToSet;
-                _selectionBgSprite.color = colorToSet;
-                var color = _selectionBgSprite.color;
-                color.a = TransparencyPercent;
-                _selectionBgSprite.color = color;
-            }
+            _iconSprite.color = _ownedColor;
+            _backgroundSprite.color = _ownedColor;
+            var backgroundColor = _backgroundSprite.color;
+            backgroundColor.a = _backgroundTransparency;
+            _backgroundSprite.color = backgroundColor;
         }
 
         public void GetSold()
         {
-            if (ColorUtility.TryParseHtmlString(GreenColor, out Color colorToSet))
-            {
-                _iconSprite.color = colorToSet;
-                _selectionBgSprite.color = colorToSet;
-                var color = _selectionBgSprite.color;
-                color.a = TransparencyPercent;
-                _selectionBgSprite.color = color;
-            }
+            _iconSprite.color = _forSaleColor;
+            _backgroundSprite.color = _forSaleColor;
+            var backgroundColor = _backgroundSprite.color;
+            backgroundColor.a = _backgroundTransparency;
+            _backgroundSprite.color = backgroundColor;
         }
 
         private void TurnBackgroundOff()
         {
-            _selectionBgSprite.enabled = false;
+            _backgroundSprite.enabled = false;
             Debug.Log("2");
             ModalUIController.Instance.ModalUIDisappeared -= TurnBackgroundOff;
             WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= TurnBackgroundOff;

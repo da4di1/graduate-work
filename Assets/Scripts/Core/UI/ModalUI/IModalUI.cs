@@ -6,6 +6,5 @@ namespace Core.UI.ModalUI
     {
         event Action Appeared;
         event Action Disappeared;
-        void Hide();
     }
 }

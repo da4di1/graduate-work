@@ -8,7 +8,6 @@ using CarsSystem.Interfaces;
 using Core.Services.Updater;
 using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
-using PathBuilding;
 using UnityEngine;
 using WarehousingSystem.Behaviour;
 using WarehousingSystem.Data;
@@ -19,34 +18,37 @@ namespace WarehousingSystem.Controllers
     public class WarehouseEntity : IWarehouseInformation, IDisposable
     {
         private readonly WarehouseScene _warehouseBehaviour;
-        private readonly PathDrawer _pathDrawer;
+        private readonly CarsFactory _carsFactory;
         private bool _isPurchasable;
-        private CarsFactory _carsFactory;
         
         public WarehouseDescriptor Descriptor { get; }
         public List<ICarInformation> Cars { get; }
 
 
-        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, PathDrawer pathDrawer, CarsFactory carsFactory)
+        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, CarsFactory carsFactory)
         {
             Descriptor = descriptor;
             _warehouseBehaviour = warehouseBehaviour;
-            _isPurchasable = true;
-            _pathDrawer = pathDrawer;
             _carsFactory = carsFactory;
+            _isPurchasable = true;
             Cars = new List<ICarInformation>();
 
-            ProjectUpdater.Instance.FixedUpdateCalled += OnFixedUpdate;
+            ProjectUpdater.Instance.UpdateCalled += OnUpdate;
         }
 
         public void Dispose()
         {
-            ProjectUpdater.Instance.FixedUpdateCalled -= OnFixedUpdate;
+            ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
 
         public int GetCarsAmount()
         {
             return Cars.Count;
+        }
+        
+        public int GetCarsAmount(CarType carType)
+        {
+            return Cars.Count(car => car.Descriptor.CarType == carType);
         }
 
         public void BuyCar(CarType carType)
@@ -70,12 +72,7 @@ namespace WarehousingSystem.Controllers
             
         }
 
-        public void FindAndRemoveCar()
-        {
-            
-        }
-
-        private void OnFixedUpdate()
+        private void OnUpdate()
         {
             if (_warehouseBehaviour.Clicked)
             {

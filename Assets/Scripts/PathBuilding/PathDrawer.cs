@@ -6,32 +6,30 @@ using CarsSystem.Enums;
 using Core.Services.Updater;
 using Core.UI.ModalUI;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace PathBuilding
 {
     public class PathDrawer : IDisposable
     {
         private readonly LineRenderer _lineRenderer;
+        private readonly Transform _pathPoints;
         private readonly CarSystem _carSystem;
         private readonly Camera _camera;
         private readonly List<PathPointDescriptor> _builtPath;
-        private readonly PathPointDescriptor[] _pathPoints;
         
-        private bool _isDragging;
-        private bool _hasQuestionAppeared;
-        private Vector3 _nextPointCoords;
+        private Vector3 _mousePosition;
         private int _linePointIndex;
+        private bool _isDragging;
         
         
-        public PathDrawer(LineRenderer lineRenderer, CarSystem carSystem)
+        public PathDrawer(LineRenderer lineRenderer, Transform pathPoints, CarSystem carSystem)
         {
             _lineRenderer = lineRenderer;
+            _pathPoints = pathPoints;
             _carSystem = carSystem;
             _builtPath = new List<PathPointDescriptor>();
             _camera = Camera.main;
             _lineRenderer.positionCount = 0;
-            _pathPoints = Object.FindObjectsOfType<PathPointDescriptor>();
             TurnPointsOff();
         }
 
@@ -39,10 +37,7 @@ namespace PathBuilding
         {
             ProjectUpdater.Instance.UpdateCalled += OnUpdate;
             
-            foreach (var point in _pathPoints)
-            {
-                point.gameObject.SetActive(true);
-            }
+            _pathPoints.gameObject.SetActive(true);
         }
 
         public void Dispose()
@@ -56,7 +51,9 @@ namespace PathBuilding
 
         private void OnUpdate()
         {
-            if (_hasQuestionAppeared) return;
+            if (ModalUIController.Instance.IsModalUIShown) return;
+            _mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
+            _mousePosition.z = -1f; //for line renderer to be visible
             CheckDragging();
             CheckMouse();
             CheckPathCancellation();
@@ -64,13 +61,8 @@ namespace PathBuilding
         
         private void CheckDragging()
         {
-            if (_isDragging)
-            {
-                Vector3 mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
-                mousePosition.z = -1f;
-                _lineRenderer.SetPosition(_linePointIndex, mousePosition);
-                _nextPointCoords = mousePosition;
-            }
+            if (!_isDragging) return;
+            _lineRenderer.SetPosition(_linePointIndex, _mousePosition);
         }
         
         private void CheckMouse()
@@ -93,85 +85,63 @@ namespace PathBuilding
                 {
                     _lineRenderer.positionCount -= 1;
                     _linePointIndex -= 1;
+                    _builtPath.RemoveAt(_builtPath.Count - 1);
                 }
                 else
                 {
                     _lineRenderer.positionCount = 0;
                     _linePointIndex = 0;
+                    _builtPath.Clear();
                     _isDragging = false;
-                }
-                
-                if (_builtPath.Count > 0)
-                {
-                    _builtPath.RemoveAt(_builtPath.Count - 1);
                 }
             }
         }
         
         private void ChooseFirstPoint()
         {
-            if (Input.GetMouseButtonDown(0))
-            {
-                RaycastHit2D hasHit = Physics2D.Raycast(_camera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-                if (hasHit.collider && hasHit.collider.TryGetComponent(out PathPointDescriptor currentPoint)
-                    && currentPoint.IsStartingPoint)
-                {
-                    _builtPath.Add(currentPoint);
-                    _isDragging = true;
-                    Vector3 mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
-                    mousePosition.z = -1f;
-                    _lineRenderer.positionCount += 2;
-                    _lineRenderer.SetPosition(_linePointIndex, mousePosition);
-                    _linePointIndex += 1;
-                }
-            }
+            if (!Input.GetMouseButtonDown(0)) return;
+            RaycastHit2D hasHit = Physics2D.Raycast(_mousePosition, Vector2.zero);
+            if (!hasHit.collider || !hasHit.collider.TryGetComponent(out PathPointDescriptor currentPoint) || !currentPoint.IsStartingPoint) return;
+            _builtPath.Add(currentPoint);
+            _isDragging = true;
+            _lineRenderer.positionCount += 2;
+            _lineRenderer.SetPosition(_linePointIndex, _mousePosition);
+            _linePointIndex += 1;
         }
 
         private void ChooseNextPoint()
         {
-            if (Input.GetMouseButtonDown(0))
+            if (!Input.GetMouseButtonDown(0)) return;
+            RaycastHit2D hasHit = Physics2D.Raycast(_mousePosition, Vector2.zero);
+            if (!hasHit.collider || !hasHit.collider.TryGetComponent(out PathPointDescriptor currentPoint)
+                                 || !_builtPath.Last().NextPointsIds.Contains(currentPoint.Id) 
+                                 || _builtPath.Any(point => point.Id == currentPoint.Id)) return;
+            if (currentPoint.IsEndingPoint)
             {
-                RaycastHit2D hasHit = Physics2D.Raycast(_nextPointCoords, Vector2.zero);
-                if (hasHit.collider && hasHit.collider.TryGetComponent(out PathPointDescriptor currentPoint) 
-                    && _builtPath.Last().NextPointsIds.Contains(currentPoint.Id) && _builtPath.All(point => point.Id != currentPoint.Id))
+                ModalUIController.Instance.Question.Show("Do you want to finish path building?", () =>
                 {
-                    if (currentPoint.IsEndingPoint)
-                    {
-                        _hasQuestionAppeared = true;
-                        ModalUIController.Instance.Question.Show("Do you want to finish path building?", () =>
-                        {
-                            _hasQuestionAppeared = false;
-                            _builtPath.Add(currentPoint);
+                    _builtPath.Add(currentPoint);
                             
-                            Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
-                            _lineRenderer.GetPositions(pathPositions);
-                            _carSystem.SpawnCar(CarType.Pickup, pathPositions);
+                    Vector3[] pathPositions = new Vector3[_lineRenderer.positionCount];
+                    _lineRenderer.GetPositions(pathPositions);
+                    _carSystem.StartCar(CarType.Pickup, pathPositions);
 
-                            _isDragging = false;
-                            Dispose();
-                            TurnPointsOff();
-                        }, () =>
-                        {
-                            _hasQuestionAppeared = false;
-                        });
-                        
-                    }
-                    else
-                    {
-                        _builtPath.Add(currentPoint);
-                        _lineRenderer.positionCount += 1;
-                        _linePointIndex += 1;
-                    }
-                }
+                    _isDragging = false;
+                    Dispose();
+                    TurnPointsOff();
+                }, null);
+            }
+            else
+            {
+                _builtPath.Add(currentPoint);
+                _lineRenderer.positionCount += 1;
+                _linePointIndex += 1;
             }
         }
 
         private void TurnPointsOff()
         {
-            foreach (var point in _pathPoints)
-            {
-                point.gameObject.SetActive(false);
-            }
+            _pathPoints.gameObject.SetActive(false);
         }
     }
 }

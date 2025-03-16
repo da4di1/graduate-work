@@ -30,40 +30,34 @@ namespace CarsSystem.Controllers
         {
             _carBehaviour = carBehaviour;
 
-            ProjectUpdater.Instance.FixedUpdateCalled += OnFixedUpdate;
+            ProjectUpdater.Instance.UpdateCalled += OnUpdate;
         }
 
         public void Dispose()
         {
-            ProjectUpdater.Instance.FixedUpdateCalled -= OnFixedUpdate;
+            ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
 
-        private void OnFixedUpdate()
+        private void OnUpdate()
         {
             _nextPosition = _pathPositions[_movementPointIndex];
-            _carBehaviour.Move(_nextPosition, Descriptor.Speed * Time.deltaTime);
+            _carBehaviour.Move(_nextPosition, Descriptor.Speed);
             float distance = Vector2.Distance(_carBehaviour.Position, _nextPosition);
-            
-            if (distance <= Mathf.Epsilon)
+
+            if (!(distance <= Mathf.Epsilon)) return;
+            if (!_isMovingBack)
             {
-                if (!_isMovingBack)
-                {
-                    _movementPointIndex++;
-                    if (_movementPointIndex > _pathPositions.Length - 1)
-                    {
-                        _isMovingBack = true;
-                        _movementPointIndex--;
-                    }
-                }
-                else
-                {
-                    _movementPointIndex--;
-                    if (_movementPointIndex < 0)
-                    {
-                        Dispose();
-                        Object.Destroy(_carBehaviour.gameObject);
-                    }
-                }
+                _movementPointIndex++;
+                if (_movementPointIndex <= _pathPositions.Length - 1) return;
+                _isMovingBack = true;
+                _movementPointIndex--;
+            }
+            else
+            {
+                _movementPointIndex--;
+                if (_movementPointIndex >= 0) return;
+                Dispose();
+                Object.Destroy(_carBehaviour.gameObject);
             }
         }
     }

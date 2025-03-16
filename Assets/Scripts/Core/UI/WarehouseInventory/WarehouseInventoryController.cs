@@ -108,8 +108,7 @@ namespace Core.UI.WarehouseInventory
         {
             foreach (var carUI in _carsUI)
             {
-                CarDescriptor carDescriptor = _warehouseEntity.Cars.FirstOrDefault(car => car.Descriptor.CarType == carUI.CarType)?.Descriptor;
-                carUI.Amount.text = carDescriptor == null ? "0" : _warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
+                carUI.Amount.text = _warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
                 
                 CarDescriptor carTypeDescriptor = _carsTypesDescriptors.FirstOrDefault(descriptor => descriptor.CarType == carUI.CarType);
                 if (carTypeDescriptor == null) continue;
@@ -120,7 +119,7 @@ namespace Core.UI.WarehouseInventory
                                                              $"Capacity {carTypeDescriptor.Capacity} kg", () =>
                     {
                         _warehouseEntity.BuyCar(carUI.CarType);
-                        carUI.Amount.text = _warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
+                        carUI.Amount.text = _warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
                     }, null);
                 });
                 carUI.SellButton.onClick.AddListener(() =>
@@ -130,7 +129,7 @@ namespace Core.UI.WarehouseInventory
                                                              $"Capacity {carTypeDescriptor.Capacity} kg", () =>
                     {
                         _warehouseEntity.SellCar(carUI.CarType);
-                        carUI.Amount.text = _warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
+                        carUI.Amount.text = _warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
                     }, null);
                 });
             }

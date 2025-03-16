@@ -36,13 +36,13 @@ namespace CarsSystem
             }
         }
 
-        public void SpawnCar(CarType carType, Vector3[] pathPositions) =>
+        public void StartCar(CarType carType, Vector3[] pathPositions) =>
             SpawnCar(_carsFactory.CreateCar(carType, pathPositions), pathPositions[0]);
 
         private void SpawnCar(CarEntity carEntity, Vector2 position)
         {
             SceneCar sceneCar = Object.Instantiate(_sceneCar, _transform);
-            sceneCar.SetCar(carEntity.Descriptor.VerticalSprite, position);
+            sceneCar.SetCar(carEntity.Descriptor.VerticalSprite, carEntity.Descriptor.HorizontalSprite, position);
             carEntity.Initialize(sceneCar);
             _disposables.Add(carEntity);
         }

@@ -38,6 +38,7 @@ namespace Core.Scene
         
         [Header("Path Drawing")] 
         [SerializeField] private LineRenderer _lineRenderer;
+        [SerializeField] private Transform _pathPoints;
 
         [Header("Cars System")] 
         [SerializeField] private CarsStorage _carsStorage;
@@ -45,6 +46,7 @@ namespace Core.Scene
         [Header("Warehousing System")] 
         [SerializeField] private WarehouseInventoryController _warehouseInventoryController;
         [SerializeField] private WarehousesStorage _warehousesStorage;
+        [SerializeField] private List<WarehouseScene> _warehousesBehaviours;
 
         private PlayerAccountController _playerAccount;
         private ProjectUpdater _projectUpdater;
@@ -52,7 +54,6 @@ namespace Core.Scene
         private MapCameraController _mapCameraController;
         private PathDrawer _pathDrawer;
         private CarSystem _carsSystem;
-        private WarehouseScene[] _warehousesBehaviours;
         private List<IDisposable> _disposables;
     
     
@@ -80,17 +81,16 @@ namespace Core.Scene
             _carsSystem = new CarSystem(carsFactory);
             _disposables.Add(_carsSystem);
             
-            _pathDrawer = new PathDrawer(_lineRenderer, _carsSystem);
+            _pathDrawer = new PathDrawer(_lineRenderer, _pathPoints, _carsSystem);
             _disposables.Add(_pathDrawer);
             
             _warehouseInventoryController.Initialize(carDescriptors, _pathDrawer);
             
-            _warehousesBehaviours = FindObjectsOfType<WarehouseScene>();
             foreach (var warehouseBehaviour in _warehousesBehaviours)
             {
                 WarehouseDescriptor descriptor = _warehousesStorage.WarehouseDescriptors.Find(descriptor => descriptor.Id == warehouseBehaviour.WarehouseId);
 
-                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, _pathDrawer, carsFactory);
+                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, carsFactory);
                 _disposables.Add(warehouseEntity);
             }
         }

@@ -4,28 +4,43 @@ namespace CarsSystem.Behaviour
 {
     public class SceneCar : MonoBehaviour
     {
-        [SerializeField] private SpriteRenderer _sprite;
+        [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private Transform _carTransform;
+
+        private Sprite _verticalSprite;
+        private Sprite _horizontalSprite;
         
         public Vector2 Position => _carTransform.position;
 
-        public void SetCar(Sprite sprite, Vector2 position)
+        
+        public void SetCar(Sprite verticalSprite, Sprite horizontalSprite, Vector2 position)
         {
-            _sprite.sprite = sprite;
+            _verticalSprite = verticalSprite;
+            _horizontalSprite = horizontalSprite;
             transform.position = position;
         }
 
         public void Move(Vector2 nextPosition, float speed)
         {
-            transform.position = Vector2.MoveTowards(transform.position, nextPosition, speed);
-            SetDirection(nextPosition, speed);
+            Turn(nextPosition);
+            transform.position = Vector2.MoveTowards(transform.position, nextPosition, speed * Time.deltaTime);
         }
-
-        private void SetDirection(Vector2 nextPosition, float speed)
+        
+        private void Turn(Vector2 nextPosition)
         {
             Vector2 direction = nextPosition - (Vector2)transform.position;
-            float rotationAngle = Mathf.Atan2(direction.normalized.y, direction.normalized.x);
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0f, 0f, rotationAngle * Mathf.Rad2Deg + 90f), speed);
+            if (Mathf.Abs(direction.x) < Mathf.Abs(direction.y))  
+            {
+                _spriteRenderer.sprite = _verticalSprite;
+                _spriteRenderer.flipY = direction.y > 0;
+                _spriteRenderer.flipX = false;
+            } 
+            else 
+            {
+                _spriteRenderer.sprite = _horizontalSprite;
+                _spriteRenderer.flipX = direction.x > 0;
+                _spriteRenderer.flipY = false;
+            }
         }
     }
 }
