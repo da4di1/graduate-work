@@ -18,6 +18,7 @@ namespace WarehousingSystem.Controllers
     public class WarehouseEntity : IWarehouseInformation, IDisposable
     {
         private readonly WarehouseScene _warehouseBehaviour;
+        private readonly IWarehouseInventoryUIDisplayer _warehouseInventory;
         private readonly CarsFactory _carsFactory;
         private bool _isPurchasable;
         
@@ -25,10 +26,12 @@ namespace WarehousingSystem.Controllers
         public List<ICarInformation> Cars { get; }
 
 
-        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, CarsFactory carsFactory)
+        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, IWarehouseInventoryUIDisplayer warehouseInventory, CarsFactory carsFactory)
         {
             Descriptor = descriptor;
             _warehouseBehaviour = warehouseBehaviour;
+            _warehouseBehaviour.Initialize((IWarehouseInventoryState)warehouseInventory);
+            _warehouseInventory = warehouseInventory;
             _carsFactory = carsFactory;
             _isPurchasable = true;
             Cars = new List<ICarInformation>();
@@ -86,7 +89,7 @@ namespace WarehousingSystem.Controllers
                 }
                 else
                 {
-                    WarehouseInventoryController.Instance.ShowWarehouseInventory(this, null, () =>
+                    _warehouseInventory.ShowWarehouseInventory(this, null, () =>
                     {
                         _isPurchasable = true;
                         _warehouseBehaviour.GetSold();

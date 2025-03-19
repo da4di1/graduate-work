@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using CarsSystem;
 using CarsSystem.Data;
 using CarsSystem.Storages;
-using Core.PlayerAccount.Controllers;
+using Core.PlayerAccount;
 using Core.Services.Updater;
 using Core.Timer;
 using Core.UI;
@@ -42,9 +42,9 @@ namespace Core.Scene
 
         [Header("Cars System")] 
         [SerializeField] private CarsStorage _carsStorage;
-
+        
         [Header("Warehousing System")] 
-        [SerializeField] private WarehouseInventoryController _warehouseInventoryController;
+        [SerializeField] private WarehouseInventoryUIController _warehouseInventoryController;
         [SerializeField] private WarehousesStorage _warehousesStorage;
         [SerializeField] private List<WarehouseScene> _warehousesBehaviours;
 
@@ -68,9 +68,14 @@ namespace Core.Scene
             }
             else
             {
-                _projectUpdater = ProjectUpdater.Instance as ProjectUpdater;
-                if (_projectUpdater != null) _projectUpdater.IsPaused = false;
+                _projectUpdater = (ProjectUpdater)ProjectUpdater.Instance;
+                _projectUpdater.IsPaused = false;
             }
+            
+            _playerAccount = new PlayerAccountController(_startingMoneyAmount);
+            _gameUIPresenter.GameUIHidden += PauseGame;
+            _gameUIPresenter.GameUIShown += UnPauseGame;
+            _gameUIPresenter.Initialize(_playerAccount, _warehouseInventoryController);
 
             _timerController = new TimerController(_timeInMinutes, _currentTimeText);
             _disposables.Add(_timerController);
@@ -90,20 +95,15 @@ namespace Core.Scene
             {
                 WarehouseDescriptor descriptor = _warehousesStorage.WarehouseDescriptors.Find(descriptor => descriptor.Id == warehouseBehaviour.WarehouseId);
 
-                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, carsFactory);
+                WarehouseEntity warehouseEntity = new WarehouseEntity(descriptor, warehouseBehaviour, _warehouseInventoryController, carsFactory);
                 _disposables.Add(warehouseEntity);
             }
         }
 
         private void Start()
         {
-            _mapCameraController = new MapCameraController(_cam, _zoomStep, _minCamSize, _mapRenderer);
+            _mapCameraController = new MapCameraController(_cam, _zoomStep, _minCamSize, _mapRenderer, _warehouseInventoryController);
             _disposables.Add(_mapCameraController);
-            
-            _playerAccount = new PlayerAccountController(_gameUIPresenter.EnteredNickname, _startingMoneyAmount);
-            _gameUIPresenter.GameUIHidden += PauseGame;
-            _gameUIPresenter.GameUIShown += UnPauseGame;
-            _gameUIPresenter.Initialize(_playerAccount);
         }
         
         private void OnDestroy()

@@ -5,12 +5,14 @@ using UnityEngine.UI;
 
 namespace Core.UI.ModalUI.ModalInterfaces
 {
-    public class QuestionUIController : MonoBehaviour, IModalUI
+    public class QuestionUIController : MonoBehaviour, IQuestionUIController, IModalUI
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private Button _yesButton;
         [SerializeField] private Button _noButton;
 
+        public bool IsShown { get; private set; }
+        
         public event Action Appeared;
         public event Action Disappeared;
         
@@ -22,8 +24,7 @@ namespace Core.UI.ModalUI.ModalInterfaces
 
         public void Show(string text, Action yesButtonClicked, Action noButtonClicked)
         {
-            if (ModalUIController.Instance.IsModalUIShown) return;
-            
+            IsShown = true;
             Appeared?.Invoke();
             gameObject.SetActive(true);
 
@@ -42,10 +43,10 @@ namespace Core.UI.ModalUI.ModalInterfaces
 
         public void Hide()
         {
+            if (!IsShown) return;
+            IsShown = false;
             gameObject.SetActive(false);
             RemoveButtonsListeners();
-            
-            if (!ModalUIController.Instance.IsModalUIShown) return;
             Disappeared?.Invoke();
         }
 

@@ -13,6 +13,7 @@ namespace Map
         private readonly float _zoomStep;
         private readonly float _minCamSize;
         private readonly TilemapRenderer _mapRenderer;
+        private readonly IWarehouseInventoryState _warehouseInventoryState;
         private readonly float _maxCamSize;
         private readonly float _mapMinX;
         private readonly float _mapMaxX;
@@ -22,7 +23,8 @@ namespace Map
         private bool _isCameraStopped;
 
 
-        public MapCameraController(Camera cam, float zoomStep, float minCamSize, TilemapRenderer mapRenderer)
+        public MapCameraController(Camera cam, float zoomStep, float minCamSize, TilemapRenderer mapRenderer, 
+            IWarehouseInventoryState warehouseInventoryState)
         {
             _cam = cam;
             _zoomStep = zoomStep;
@@ -36,24 +38,19 @@ namespace Map
             _mapMinY = mapRenderer.bounds.center.y - mapRenderer.bounds.size.y / 2f;
             _mapMaxY = mapRenderer.bounds.center.y + mapRenderer.bounds.size.y / 2f - 1f;
 
-            ModalUIController.Instance.ModalUIAppeared += StopCamera;
-            ModalUIController.Instance.ModalUIDisappeared += StartCameraMovement;
-            WarehouseInventoryController.Instance.WarehouseInventoryAppeared += StopCamera;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += StartCameraMovement;
-            StartCameraMovement();
+            _warehouseInventoryState = warehouseInventoryState;
+            
+            ProjectUpdater.Instance.UpdateCalled += OnUpdate;
         }
 
         public void Dispose()
         {
-            ModalUIController.Instance.ModalUIAppeared -= StopCamera;
-            ModalUIController.Instance.ModalUIDisappeared -= StartCameraMovement;
-            WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= StopCamera;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= StartCameraMovement;
-            StopCamera();
+            ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
     
         private void OnUpdate()
         {
+            if (ModalUIController.Instance.IsModalUIShown || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
             PanCamera();
             Zoom();
         }
@@ -103,18 +100,6 @@ namespace Map
             float newY = Mathf.Clamp(targetPosition.y, minY, maxY);
 
             return new Vector3(newX, newY, targetPosition.z);
-        }
-
-        private void StartCameraMovement()
-        {
-            if (ModalUIController.Instance.IsModalUIShown || WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
-            ProjectUpdater.Instance.UpdateCalled += OnUpdate;
-        }
-
-        private void StopCamera()
-        {
-            if (ModalUIController.Instance.IsModalUIShown || WarehouseInventoryController.Instance.IsWarehouseInventoryUIShown) return;
-            ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
         }
     }
 }

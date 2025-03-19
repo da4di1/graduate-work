@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.PlayerAccount.Interfaces;
+using Core.PlayerAccount;
 using Core.Services.PlayFab;
 using Core.UI.ModalUI;
 using Core.UI.WarehouseInventory;
@@ -25,11 +25,10 @@ namespace Core.UI
         [SerializeField] private PostProcessLayer _postProcessLayer;
 
         private PlayFabService _playFabService;
-        private IPlayerInformation _playerInformation;
+        private PlayerAccountController _playerInformation;
+        private IWarehouseInventoryState _warehouseInventoryState;
         private List<Button[]> _stopButtonsLayers;
         private List<Transform> _openedUIWindows;
-
-        public string EnteredNickname => _playFabService.PlayerAccountNickname;
         
         public event Action GameUIHidden;
         public event Action GameUIShown;
@@ -41,36 +40,38 @@ namespace Core.UI
             _openedUIWindows = new List<Transform>();
             _playFabService = new PlayFabService();
 
-            _playFabService.AccountInfoReceived += HideLoadingScreen;
+            _playFabService.AccountInfoReceived += StartGame;
             _playFabService.LeaderboardUpdated += ShowGameOverScreen;
             _playFabService.ErrorOccured += ShowErrorMessage;
         }
 
         private void Start()
         {
+            ShowLoadingScreen();
+            _playFabService.Initialize();
+            
             ModalUIController.Instance.ModalUIAppeared += PauseInterface;
             ModalUIController.Instance.ModalUIDisappeared += UnPauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryAppeared += PauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared += UnPauseInterface;
+            _warehouseInventoryState.WarehouseInventoryAppeared += PauseInterface;
+            _warehouseInventoryState.WarehouseInventoryDisappeared += UnPauseInterface;
         }
 
         private void OnDestroy()
         {
-            _playFabService.AccountInfoReceived -= HideLoadingScreen;
+            _playFabService.AccountInfoReceived -= StartGame;
             _playFabService.LeaderboardUpdated -= ShowGameOverScreen;
             _playFabService.ErrorOccured -= ShowErrorMessage;
             
             ModalUIController.Instance.ModalUIAppeared -= PauseInterface;
             ModalUIController.Instance.ModalUIDisappeared -= UnPauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryAppeared -= PauseInterface;
-            WarehouseInventoryController.Instance.WarehouseInventoryDisappeared -= UnPauseInterface;
+            _warehouseInventoryState.WarehouseInventoryAppeared -= PauseInterface;
+            _warehouseInventoryState.WarehouseInventoryDisappeared -= UnPauseInterface;
         }
 
-        public void Initialize(IPlayerInformation playerInformation)
+        public void Initialize(PlayerAccountController playerInformation, IWarehouseInventoryState warehouseInventoryState)
         {
             _playerInformation = playerInformation;
-            ShowLoadingScreen();
-            _playFabService.Initialize();
+            _warehouseInventoryState = warehouseInventoryState;
         }
         
         public void RestartGame()
@@ -109,8 +110,7 @@ namespace Core.UI
 
         public void HideInterface()
         {
-            ModalUIController.Instance.Dialog.Hide();
-            ModalUIController.Instance.Question.Hide();
+            ModalUIController.Instance.HideModalInterfaces();
             
             foreach (Transform windowUI in _userInterface)
             {
@@ -135,6 +135,12 @@ namespace Core.UI
         {
             ShowLoadingScreen();
             _playFabService.UpdateLeaderboard(300000);
+        }
+        
+        private void StartGame()
+        {
+            _playerInformation.SetNickName(_playFabService.PlayerAccountNickname);
+            HideLoadingScreen();
         }
 
         private void ShowLoadingScreen()

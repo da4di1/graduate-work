@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Core.UI.ModalUI.ModalInterfaces;
 using UnityEngine;
 
@@ -9,11 +10,13 @@ namespace Core.UI.ModalUI
     {
         public static ModalUIController Instance { get; private set; }
 
-        [field: SerializeField] public DialogUIController Dialog { get; private set; }
-        [field: SerializeField] public QuestionUIController Question { get; private set; }
+        [SerializeField] private DialogUIController _dialog;
+        [SerializeField] private QuestionUIController _question;
 
         private List<IModalUI> _modalInterfaces;
-        
+
+        public IDialogUIController Dialog => _dialog;
+        public IQuestionUIController Question => _question;
         public bool IsModalUIShown { get; private set; }
 
         public event Action ModalUIAppeared;
@@ -34,8 +37,8 @@ namespace Core.UI.ModalUI
 
             _modalInterfaces = new List<IModalUI>
             {
-                Dialog,
-                Question,
+                _dialog,
+                _question,
             };
         }
 
@@ -57,14 +60,24 @@ namespace Core.UI.ModalUI
             }
         }
 
+        public void HideModalInterfaces()
+        {
+            foreach (var modalUI in _modalInterfaces)
+            {
+                modalUI.Hide();
+            }
+        }
+
         private void OnModalUIAppeared()
         {
-            ModalUIAppeared?.Invoke();
+            if (IsModalUIShown) return;
             IsModalUIShown = true;
+            ModalUIAppeared?.Invoke();
         }
 
         private void OnModalUIDisappeared()
         {
+            if (_modalInterfaces.Any(modalUI => modalUI.IsShown)) return;
             IsModalUIShown = false;
             ModalUIDisappeared?.Invoke();
         }
