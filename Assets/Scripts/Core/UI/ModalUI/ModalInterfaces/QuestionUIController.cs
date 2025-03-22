@@ -11,7 +11,7 @@ namespace Core.UI.ModalUI.ModalInterfaces
         [SerializeField] private Button _yesButton;
         [SerializeField] private Button _noButton;
 
-        public bool IsShown { get; private set; }
+        public bool IsShown => gameObject.activeSelf;
         
         public event Action Appeared;
         public event Action Disappeared;
@@ -24,7 +24,6 @@ namespace Core.UI.ModalUI.ModalInterfaces
 
         public void Show(string text, Action yesButtonClicked, Action noButtonClicked)
         {
-            IsShown = true;
             Appeared?.Invoke();
             gameObject.SetActive(true);
 
@@ -44,7 +43,6 @@ namespace Core.UI.ModalUI.ModalInterfaces
         public void Hide()
         {
             if (!IsShown) return;
-            IsShown = false;
             gameObject.SetActive(false);
             RemoveButtonsListeners();
             Disappeared?.Invoke();

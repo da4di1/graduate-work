@@ -111,7 +111,6 @@ namespace Core.UI
         public void HideInterface()
         {
             ModalUIController.Instance.HideModalInterfaces();
-            
             foreach (Transform windowUI in _userInterface)
             {
                 if (!windowUI.gameObject.activeSelf) continue;

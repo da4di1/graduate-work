@@ -14,8 +14,6 @@ namespace Core.UI.WarehouseInventory
 {
     public class WarehouseInventoryUIController : MonoBehaviour, IWarehouseInventoryUIDisplayer, IWarehouseInventoryState
     {
-        /*public static IWarehouseInventoryController Instance { get; private set; }*/
-
         [SerializeField] private LoadCarInventoryUIController _loadCarInventory;
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button _sellButton;
@@ -26,18 +24,11 @@ namespace Core.UI.WarehouseInventory
         private List<CarDescriptor> _carsTypesDescriptors;
         private PathDrawer _pathDrawer;
         
-        public bool IsWarehouseInventoryUIShown { get; private set; }
+        public bool IsWarehouseInventoryUIShown => gameObject.activeSelf || _loadCarInventory.gameObject.activeSelf;
 
         public event Action WarehouseInventoryAppeared;
         public event Action WarehouseInventoryDisappeared;
-
         
-        /*private void Awake()
-        {
-            Instance = this;
-            
-            Hide();
-        }*/
 
         private void OnDestroy()
         {
@@ -61,7 +52,6 @@ namespace Core.UI.WarehouseInventory
         public void ShowWarehouseInventory(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action sellButtonClicked,
             Action loadCarButtonClicked)
         {
-            IsWarehouseInventoryUIShown = true;
             WarehouseInventoryAppeared?.Invoke();
             gameObject.SetActive(true);
             _loadCarInventory.Closed += Hide;
@@ -137,10 +127,9 @@ namespace Core.UI.WarehouseInventory
 
         private void Hide()
         {
-            IsWarehouseInventoryUIShown = false;
-            WarehouseInventoryDisappeared?.Invoke();
             gameObject.SetActive(false);
             RemoveButtonsListeners();
+            WarehouseInventoryDisappeared?.Invoke();
         }
 
         private void RemoveButtonsListeners()
