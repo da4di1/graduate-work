@@ -14,10 +14,11 @@ namespace Core.UI.ModalUI
         [SerializeField] private QuestionUIController _question;
 
         private List<IModalUI> _modalInterfaces;
+        private List<IModalUI> _modalInterfacesToReshow;
 
         public IDialogUIController Dialog => _dialog;
         public IQuestionUIController Question => _question;
-        public bool IsModalUIShown { get; private set; }
+        public bool IsModalUIShown => _modalInterfaces.Any(modalUI => modalUI.IsShown);
 
         public event Action ModalUIAppeared;
         public event Action ModalUIDisappeared;
@@ -40,6 +41,8 @@ namespace Core.UI.ModalUI
                 _dialog,
                 _question,
             };
+
+            _modalInterfacesToReshow = new List<IModalUI>();
         }
 
         private void Start()
@@ -60,25 +63,41 @@ namespace Core.UI.ModalUI
             }
         }
 
+        public void ResetModalUIs()
+        {
+            _modalInterfacesToReshow.Clear();
+        }
+
         public void HideModalInterfaces()
         {
-            foreach (var modalUI in _modalInterfaces)
+            foreach (IModalUI modalUI in _modalInterfaces)
             {
-                modalUI.Hide();
+                bool isSetToReshow = modalUI.SetInactive();
+                if (isSetToReshow)
+                {
+                    _modalInterfacesToReshow.Add(modalUI);
+                }
             }
+        }
+
+        public void ShowHiddenModalInterfaces()
+        {
+            foreach (IModalUI modalUI in _modalInterfacesToReshow)
+            {
+                modalUI.SetActive();
+            }
+            ResetModalUIs();
         }
 
         private void OnModalUIAppeared()
         {
             if (IsModalUIShown) return;
-            IsModalUIShown = true;
             ModalUIAppeared?.Invoke();
         }
 
         private void OnModalUIDisappeared()
         {
-            if (_modalInterfaces.Any(modalUI => modalUI.IsShown)) return;
-            IsModalUIShown = false;
+            if (IsModalUIShown) return;
             ModalUIDisappeared?.Invoke();
         }
     }

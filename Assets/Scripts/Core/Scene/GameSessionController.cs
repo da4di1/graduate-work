@@ -74,7 +74,7 @@ namespace Core.Scene
             
             _playerAccount = new PlayerAccountController(_startingMoneyAmount);
             _gameUIPresenter.GameUIHidden += PauseGame;
-            _gameUIPresenter.GameUIShown += UnPauseGame;
+            _gameUIPresenter.GameUIShown += UnpauseGame;
             _gameUIPresenter.Initialize(_playerAccount, _warehouseInventoryController);
 
             _timerController = new TimerController(_timeInMinutes, _currentTimeText);
@@ -109,7 +109,7 @@ namespace Core.Scene
         private void OnDestroy()
         {
             _gameUIPresenter.GameUIHidden -= PauseGame;
-            _gameUIPresenter.GameUIShown -= UnPauseGame;
+            _gameUIPresenter.GameUIShown -= UnpauseGame;
             _timerController.TimeExpired -= FinishGame;
             
             foreach (var disposable in _disposables)
@@ -123,7 +123,7 @@ namespace Core.Scene
             _projectUpdater.IsPaused = true;
         }
 
-        private void UnPauseGame()
+        private void UnpauseGame()
         {
             _projectUpdater.IsPaused = false;
         }

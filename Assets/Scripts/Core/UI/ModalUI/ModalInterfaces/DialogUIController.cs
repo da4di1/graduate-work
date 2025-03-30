@@ -23,6 +23,7 @@ namespace Core.UI.ModalUI.ModalInterfaces
 
         public void Show(string text, Action okayButtonClicked)
         {
+            RemoveButtonsListeners();
             Appeared?.Invoke();
             gameObject.SetActive(true);
 
@@ -34,7 +35,19 @@ namespace Core.UI.ModalUI.ModalInterfaces
             });
         }
 
-        public void Hide()
+        public void SetActive()
+        {
+            gameObject.SetActive(true);
+        }
+        
+        public bool SetInactive()
+        {
+            if (!IsShown) return false;
+            gameObject.SetActive(false);
+            return true;
+        }
+        
+        private void Hide()
         {
             if (!IsShown) return;
             gameObject.SetActive(false);

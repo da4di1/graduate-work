@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Core.Services.PlayFab;
+using Core.UI.ModalUI;
 using PlayFab.ClientModels;
 using TMPro;
 using UnityEngine;
@@ -42,6 +43,7 @@ namespace Core.UI
         
         private void Start()
         {
+            ModalUIController.Instance.ResetModalUIs();
             _loadingScreen.gameObject.SetActive(true);
             _playFabService.Initialize();
         }

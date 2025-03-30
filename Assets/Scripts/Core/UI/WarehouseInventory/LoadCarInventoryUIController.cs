@@ -31,6 +31,7 @@ namespace Core.UI.WarehouseInventory
         private PathDrawer _pathDrawer;
 
         public event Action Closed;
+        public event Action CarLoaded;
 
         
         private void OnDestroy()
@@ -77,12 +78,16 @@ namespace Core.UI.WarehouseInventory
                 });
             }
             
-            _closeButton.onClick.AddListener(Hide);
+            _closeButton.onClick.AddListener(() =>
+            {
+                Hide();
+                Closed?.Invoke();
+            });
             _startCarButton.onClick.AddListener(() =>
             {
                 Hide();
                 _pathDrawer.StartDrawingPath();
-                Closed?.Invoke();
+                CarLoaded?.Invoke();
             });
             
         }

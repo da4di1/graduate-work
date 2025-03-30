@@ -28,7 +28,7 @@ namespace Core.UI
         private PlayerAccountController _playerInformation;
         private IWarehouseInventoryState _warehouseInventoryState;
         private List<Button[]> _stopButtonsLayers;
-        private List<Transform> _openedUIWindows;
+        private List<Transform> _interfacesToReshow;
         
         public event Action GameUIHidden;
         public event Action GameUIShown;
@@ -37,7 +37,7 @@ namespace Core.UI
         private void Awake()
         {
             _stopButtonsLayers = new List<Button[]>();
-            _openedUIWindows = new List<Transform>();
+            _interfacesToReshow = new List<Transform>();
             _playFabService = new PlayFabService();
 
             _playFabService.AccountInfoReceived += StartGame;
@@ -47,6 +47,7 @@ namespace Core.UI
 
         private void Start()
         {
+            ModalUIController.Instance.ResetModalUIs();
             ShowLoadingScreen();
             _playFabService.Initialize();
             
@@ -110,24 +111,25 @@ namespace Core.UI
 
         public void HideInterface()
         {
+            GameUIHidden?.Invoke();
             ModalUIController.Instance.HideModalInterfaces();
             foreach (Transform windowUI in _userInterface)
             {
                 if (!windowUI.gameObject.activeSelf) continue;
-                _openedUIWindows.Add(windowUI);
+                _interfacesToReshow.Add(windowUI);
                 windowUI.gameObject.SetActive(false);
             }
-            GameUIHidden?.Invoke();
         }
 
         public void ShowHiddenInterface()
         {
-            foreach (var windowUI in _openedUIWindows)
+            GameUIShown?.Invoke();
+            ModalUIController.Instance.ShowHiddenModalInterfaces();
+            foreach (Transform windowUI in _interfacesToReshow)
             {
                 windowUI.gameObject.SetActive(true);
             }
-            _openedUIWindows.Clear();
-            GameUIShown?.Invoke();
+            _interfacesToReshow.Clear();
         }
 
         public void FinishGame()
