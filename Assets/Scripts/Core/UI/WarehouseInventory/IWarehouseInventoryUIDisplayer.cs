@@ -5,7 +5,7 @@ namespace Core.UI.WarehouseInventory
 {
     public interface IWarehouseInventoryUIDisplayer
     {
-        void ShowWarehouseInventory(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action sellButtonClicked,
+        void Show(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action sellButtonClicked,
             Action loadCarButtonClicked);
     }
 }

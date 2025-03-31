@@ -89,7 +89,7 @@ namespace WarehousingSystem.Controllers
                 }
                 else
                 {
-                    _warehouseInventory.ShowWarehouseInventory(this, null, () =>
+                    _warehouseInventory.Show(this, null, () =>
                     {
                         _isPurchasable = true;
                         _warehouseBehaviour.GetSold();

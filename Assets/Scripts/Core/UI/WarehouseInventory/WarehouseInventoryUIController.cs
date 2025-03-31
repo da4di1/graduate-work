@@ -21,7 +21,6 @@ namespace Core.UI.WarehouseInventory
         [SerializeField] private List<CarUI> _carsUI;
         
         private List<CarDescriptor> _carsTypesDescriptors;
-        private PathDrawer _pathDrawer;
         
         public bool IsWarehouseInventoryUIShown => gameObject.activeSelf || _loadCarInventory.gameObject.activeSelf;
 
@@ -36,7 +35,7 @@ namespace Core.UI.WarehouseInventory
 
         public void Initialize(List<CarDescriptor> carsTypesDescriptors, PathDrawer pathDrawer)
         {
-            _pathDrawer = pathDrawer;
+            _loadCarInventory.Initialize(carsTypesDescriptors, pathDrawer);
             _carsTypesDescriptors = carsTypesDescriptors;
             foreach (var carUI in _carsUI)
             {
@@ -48,13 +47,10 @@ namespace Core.UI.WarehouseInventory
             }
         }
 
-        public void ShowWarehouseInventory(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action sellButtonClicked,
-            Action loadCarButtonClicked)
+        public void Show(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action sellButtonClicked, Action loadCarButtonClicked)
         {
             WarehouseInventoryAppeared?.Invoke();
             gameObject.SetActive(true);
-            _loadCarInventory.CarLoaded += Hide;
-            _loadCarInventory.Closed += SetActive;
             SetCarsUI(warehouseEntity);
             
             _closeButton.onClick.AddListener(() =>
@@ -64,7 +60,7 @@ namespace Core.UI.WarehouseInventory
             });
             _sellButton.onClick.AddListener(() =>
             {
-                ModalUIController.Instance.Question.Show($"Do you want to sell this warehouse for {warehouseEntity.Descriptor.SalePrice}?",
+                ModalUIController.Instance.Question.Show($"Do you want to sell this warehouse for {warehouseEntity.Descriptor.SalePrice}$?",
                     () =>
                     {
                         if (warehouseEntity.GetCarsAmount() > 0)
@@ -82,10 +78,9 @@ namespace Core.UI.WarehouseInventory
             {
                 if (warehouseEntity.GetCarsAmount() > 0)
                 {
-                    loadCarButtonClicked?.Invoke();
                     gameObject.SetActive(false);
-                    _loadCarInventory.gameObject.SetActive(true);
-                    _loadCarInventory.Initialize(warehouseEntity, _carsTypesDescriptors, _pathDrawer);
+                    _loadCarInventory.Show(warehouseEntity, SetActive, Hide);
+                    loadCarButtonClicked?.Invoke();
                 }
                 else
                 {
@@ -139,9 +134,6 @@ namespace Core.UI.WarehouseInventory
 
         private void RemoveButtonsListeners()
         {
-            _loadCarInventory.CarLoaded -= Hide;
-            _loadCarInventory.Closed -= SetActive;
-            
             _closeButton.onClick.RemoveAllListeners();
             _sellButton.onClick.RemoveAllListeners();
             _loadCarButton.onClick.RemoveAllListeners();
