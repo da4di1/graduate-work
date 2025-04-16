@@ -26,7 +26,8 @@ namespace WarehousingSystem.Controllers
         public List<ICarInformation> Cars { get; }
 
 
-        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, IWarehouseInventoryUIDisplayer warehouseInventory, CarsFactory carsFactory)
+        public WarehouseEntity(WarehouseDescriptor descriptor, WarehouseScene warehouseBehaviour, IWarehouseInventoryUIDisplayer warehouseInventory, 
+            CarsFactory carsFactory)
         {
             Descriptor = descriptor;
             _warehouseBehaviour = warehouseBehaviour;
@@ -72,7 +73,6 @@ namespace WarehousingSystem.Controllers
             {
                 Cars.Remove(carToSell);
             }
-            
         }
 
         private void OnUpdate()

@@ -40,44 +40,22 @@ namespace Core.UI.WarehouseInventory
         {
             _carsTypesDescriptors = carsTypesDescriptors;
             _pathDrawer = pathDrawer;
+            foreach (var carUI in _carsUI)
+            {
+                CarDescriptor carTypeDescriptor = carsTypesDescriptors.FirstOrDefault(descriptor => descriptor.CarType == carUI.CarType);
+                if (carTypeDescriptor == null) continue;
+                carUI.Capacity.text = carTypeDescriptor.Capacity + "kg";
+                carUI.Icon.sprite = carTypeDescriptor.HorizontalSprite;
+            }
         }
         
         public void Show(WarehouseEntity warehouseEntity, Action closeButtonClicked, Action startCarButtonClicked)
         {
             gameObject.SetActive(true);
+            SetCarsUI(warehouseEntity);
             
             _incomeFromProducts.text = _productsTotalIncome.ToString();
             _currentProductsWeight.text = "0";
-            
-            foreach (var carUI in _carsUI)
-            {
-                CarDescriptor carTypeDescriptor = _carsTypesDescriptors.FirstOrDefault(descriptor => descriptor.CarType == carUI.CarType);
-                if (carTypeDescriptor == null) continue;
-                carUI.Amount.text = warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
-                carUI.AmountForLoading.text = "-0";
-                carUI.Capacity.text = carTypeDescriptor.Capacity + "kg";
-                carUI.Icon.sprite = carTypeDescriptor.HorizontalSprite;
-                
-                carUI.PickButton.onClick.AddListener(() =>
-                {
-                    if (_pickedCarButton != null)
-                    {
-                        _pickedCarButton.interactable = true;
-                        _pickedCarAmountForLoading.text = "-0";
-                        warehouseEntity.Cars.Add(_pickedCar);
-                        _pickedCarAmount.text = warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
-                    }
-                    carUI.PickButton.interactable = false;
-                    _pickedCarButton = carUI.PickButton;
-                    carUI.AmountForLoading.text = "-1";
-                    _pickedCarAmountForLoading = carUI.AmountForLoading;
-                    _pickedCar = warehouseEntity.Cars.Find(car => car.Descriptor.CarType == carUI.CarType);
-                    warehouseEntity.Cars.Remove(_pickedCar);
-                    carUI.Amount.text = warehouseEntity.Cars.Count(car => car.Descriptor.CarType == carUI.CarType).ToString();
-                    _pickedCarAmount = carUI.Amount;
-                    _maxWeight.text = carUI.Capacity.text;
-                });
-            }
             
             _closeButton.onClick.AddListener(() =>
             {
@@ -91,6 +69,37 @@ namespace Core.UI.WarehouseInventory
                 startCarButtonClicked?.Invoke();
             });
             
+        }
+
+        private void SetCarsUI(WarehouseEntity warehouseEntity)
+        {
+            foreach (var carUI in _carsUI)
+            {
+                carUI.Amount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
+                carUI.AmountForLoading.text = "-0";
+                
+                CarDescriptor carTypeDescriptor = _carsTypesDescriptors.FirstOrDefault(descriptor => descriptor.CarType == carUI.CarType);
+                if (carTypeDescriptor == null) continue;
+                carUI.PickButton.onClick.AddListener(() =>
+                {
+                    if (_pickedCarButton != null)
+                    {
+                        _pickedCarButton.interactable = true;
+                        _pickedCarAmountForLoading.text = "-0";
+                        warehouseEntity.Cars.Add(_pickedCar);
+                        _pickedCarAmount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
+                    }
+                    carUI.PickButton.interactable = false;
+                    _pickedCarButton = carUI.PickButton;
+                    carUI.AmountForLoading.text = "-1";
+                    _pickedCarAmountForLoading = carUI.AmountForLoading;
+                    _pickedCar = warehouseEntity.Cars.Find(car => car.Descriptor.CarType == carUI.CarType);
+                    warehouseEntity.Cars.Remove(_pickedCar);
+                    carUI.Amount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
+                    _pickedCarAmount = carUI.Amount;
+                    _maxWeight.text = carUI.Capacity.text;
+                });
+            }
         }
         
         private void Hide()

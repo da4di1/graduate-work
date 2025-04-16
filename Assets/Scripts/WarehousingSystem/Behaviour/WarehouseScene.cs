@@ -14,26 +14,27 @@ namespace WarehousingSystem.Behaviour
         [SerializeField] private SpriteRenderer _iconSprite;
         [SerializeField] private SpriteRenderer _backgroundSprite;
         [SerializeField] private float _backgroundTransparency;
-        
-        [field: SerializeField] public WarehouseId WarehouseId { get; private set; }
 
         private bool _isBackgroundHidingDelayed;
         private IWarehouseInventoryState _warehouseInventoryState;
+        
+        [field: SerializeField] public WarehouseId WarehouseId { get; private set; }
         
         public bool Clicked { get; private set; }
 
 
         private void OnMouseEnter()
         {
-            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown ||
-                _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown 
+                                                 || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
             _backgroundSprite.enabled = true;
         }
 
         private void OnMouseExit()
         {
             if (!_backgroundSprite.enabled) return;
-            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || _warehouseInventoryState.IsWarehouseInventoryUIShown)
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown 
+                                                 || _warehouseInventoryState.IsWarehouseInventoryUIShown)
             {
                 if (_isBackgroundHidingDelayed) return;
                 _isBackgroundHidingDelayed = true;
@@ -48,8 +49,8 @@ namespace WarehousingSystem.Behaviour
 
         private void OnMouseDown()
         {
-            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown || 
-                _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown 
+                                                 || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
             Clicked = true;
         }
 
@@ -89,7 +90,8 @@ namespace WarehousingSystem.Behaviour
 
         private void TurnBackgroundOff()
         {
-            if (ModalUIController.Instance.IsModalUIShown || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
+            if (ProjectUpdater.Instance.IsPaused || ModalUIController.Instance.IsModalUIShown 
+                                                 || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
             _isBackgroundHidingDelayed = false;
             _backgroundSprite.enabled = false;
             ModalUIController.Instance.ModalUIDisappeared -= TurnBackgroundOff;

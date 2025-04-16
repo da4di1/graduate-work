@@ -10,14 +10,14 @@ namespace Core.UI.ModalUI
     {
         public static ModalUIController Instance { get; private set; }
 
-        [SerializeField] private DialogUIController _dialog;
-        [SerializeField] private QuestionUIController _question;
+        [SerializeField] private DialogUIDisplayer _dialog;
+        [SerializeField] private QuestionUIDisplayer _question;
 
         private List<IModalUI> _modalInterfaces;
         private List<IModalUI> _modalInterfacesToReshow;
 
-        public IDialogUIController Dialog => _dialog;
-        public IQuestionUIController Question => _question;
+        public IDialogUIDisplayer Dialog => _dialog;
+        public IQuestionUIDisplayer Question => _question;
         public bool IsModalUIShown => _modalInterfaces.Any(modalUI => modalUI.IsShown);
 
         public event Action ModalUIAppeared;
@@ -65,6 +65,7 @@ namespace Core.UI.ModalUI
 
         public void ResetModalUIs()
         {
+            HideModalInterfaces();
             _modalInterfacesToReshow.Clear();
         }
 
@@ -72,7 +73,7 @@ namespace Core.UI.ModalUI
         {
             foreach (IModalUI modalUI in _modalInterfaces)
             {
-                bool isSetToReshow = modalUI.SetInactive();
+                bool isSetToReshow = modalUI.Hide();
                 if (isSetToReshow)
                 {
                     _modalInterfacesToReshow.Add(modalUI);
@@ -84,9 +85,9 @@ namespace Core.UI.ModalUI
         {
             foreach (IModalUI modalUI in _modalInterfacesToReshow)
             {
-                modalUI.SetActive();
+                modalUI.Reshow();
             }
-            ResetModalUIs();
+            _modalInterfacesToReshow.Clear();
         }
 
         private void OnModalUIAppeared()

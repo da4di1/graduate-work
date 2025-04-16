@@ -2,7 +2,7 @@
 
 namespace Core.UI.ModalUI.ModalInterfaces
 {
-    public interface IQuestionUIController
+    public interface IQuestionUIDisplayer
     {
         void Show(string text, Action yesButtonClicked, Action noButtonClicked);
     }

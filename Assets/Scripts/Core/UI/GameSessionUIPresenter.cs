@@ -4,7 +4,6 @@ using System.Linq;
 using Core.PlayerAccount;
 using Core.Services.PlayFab;
 using Core.UI.ModalUI;
-using Core.UI.WarehouseInventory;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
@@ -12,10 +11,11 @@ using UnityEngine.UI;
 
 namespace Core.UI
 {
-    public class GameSessionMenuUIPresenter : MonoBehaviour
+    public class GameSessionUIPresenter : MonoBehaviour
     {
         [SerializeField] private Transform _userInterface;
-        [SerializeField] private Transform _gameOverInterface;
+        [SerializeField] private Transform _pauseMenuScreen;
+        [SerializeField] private Transform _gameOverScreen;
         [SerializeField] private Transform _loadingScreen;
         [SerializeField] private Transform _errorScreen;
         [SerializeField] private LayerMask _viewUIMask;
@@ -26,9 +26,8 @@ namespace Core.UI
 
         private PlayFabService _playFabService;
         private PlayerAccountController _playerInformation;
-        private IWarehouseInventoryState _warehouseInventoryState;
-        private List<Button[]> _stopButtonsLayers;
         private List<Transform> _interfacesToReshow;
+        private List<Button> _modalUIAffectedButtons;
         
         public event Action GameUIHidden;
         public event Action GameUIShown;
@@ -36,11 +35,17 @@ namespace Core.UI
         
         private void Awake()
         {
-            _stopButtonsLayers = new List<Button[]>();
-            _interfacesToReshow = new List<Transform>();
             _playFabService = new PlayFabService();
+            _interfacesToReshow = new List<Transform>();
+            _modalUIAffectedButtons = new List<Button>();
+            List<Button> buttonsOnScene = _userInterface.GetComponentsInChildren<Button>(true).ToList();
+            foreach (var button in buttonsOnScene)
+            {
+                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue; //checking if button layer included in layer mask
+                _modalUIAffectedButtons.Add(button);
+            }
 
-            _playFabService.AccountInfoReceived += StartGame;
+            _playFabService.AccountInfoReceived += StartGameSession;
             _playFabService.LeaderboardUpdated += ShowGameOverScreen;
             _playFabService.ErrorOccured += ShowErrorMessage;
         }
@@ -51,46 +56,47 @@ namespace Core.UI
             ShowLoadingScreen();
             _playFabService.Initialize();
             
-            ModalUIController.Instance.ModalUIAppeared += PauseInterface;
-            ModalUIController.Instance.ModalUIDisappeared += UnPauseInterface;
-            _warehouseInventoryState.WarehouseInventoryAppeared += PauseInterface;
-            _warehouseInventoryState.WarehouseInventoryDisappeared += UnPauseInterface;
+            ModalUIController.Instance.ModalUIAppeared += PauseButtons;
+            ModalUIController.Instance.ModalUIDisappeared += UnPauseButtons;
         }
 
         private void OnDestroy()
         {
-            _playFabService.AccountInfoReceived -= StartGame;
+            _playFabService.AccountInfoReceived -= StartGameSession;
             _playFabService.LeaderboardUpdated -= ShowGameOverScreen;
             _playFabService.ErrorOccured -= ShowErrorMessage;
             
-            ModalUIController.Instance.ModalUIAppeared -= PauseInterface;
-            ModalUIController.Instance.ModalUIDisappeared -= UnPauseInterface;
-            _warehouseInventoryState.WarehouseInventoryAppeared -= PauseInterface;
-            _warehouseInventoryState.WarehouseInventoryDisappeared -= UnPauseInterface;
+            ModalUIController.Instance.ModalUIAppeared -= PauseButtons;
+            ModalUIController.Instance.ModalUIDisappeared -= UnPauseButtons;
         }
 
-        public void Initialize(PlayerAccountController playerInformation, IWarehouseInventoryState warehouseInventoryState)
+        public void Initialize(PlayerAccountController playerInformation)
         {
             _playerInformation = playerInformation;
-            _warehouseInventoryState = warehouseInventoryState;
         }
         
-        public void RestartGame()
+        public void RestartGameSession()
         {
-            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-            
-            SceneManager.LoadScene(currentSceneIndex);
+            ModalUIController.Instance.Question.Show("Are you sure you want to restart this game session?", () =>
+            {
+                ShowLoadingScreen();
+                
+                int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+                SceneManager.LoadScene(currentSceneIndex);
+            }, null);
         }
 
         public void ReturnToMainMenu()
         {
-            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-
-            int mainMenuSceneIndex = currentSceneIndex - 1;
-            if (mainMenuSceneIndex < 0)
-                return;
-
-            SceneManager.LoadScene(mainMenuSceneIndex); 
+            ModalUIController.Instance.Question.Show("Are you sure you want to return to main menu?", () =>
+            {
+                ShowLoadingScreen();
+                
+                int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+                int mainMenuSceneIndex = currentSceneIndex - 1;
+                if (mainMenuSceneIndex < 0) return;
+                SceneManager.LoadScene(mainMenuSceneIndex); 
+            }, null);
         }
 
         public void ShowPlayerInformation()
@@ -112,6 +118,7 @@ namespace Core.UI
         public void HideInterface()
         {
             GameUIHidden?.Invoke();
+            
             ModalUIController.Instance.HideModalInterfaces();
             foreach (Transform windowUI in _userInterface)
             {
@@ -119,26 +126,33 @@ namespace Core.UI
                 _interfacesToReshow.Add(windowUI);
                 windowUI.gameObject.SetActive(false);
             }
+            
+            _postProcessVolume.enabled = true;
+            _postProcessLayer.enabled = true;
         }
 
         public void ShowHiddenInterface()
         {
             GameUIShown?.Invoke();
+            
             ModalUIController.Instance.ShowHiddenModalInterfaces();
             foreach (Transform windowUI in _interfacesToReshow)
             {
                 windowUI.gameObject.SetActive(true);
             }
             _interfacesToReshow.Clear();
+            
+            _postProcessVolume.enabled = false;
+            _postProcessLayer.enabled = false;
         }
 
-        public void FinishGame()
+        public void FinishGameSession()
         {
             ShowLoadingScreen();
             _playFabService.UpdateLeaderboard(300000);
         }
         
-        private void StartGame()
+        private void StartGameSession()
         {
             _playerInformation.SetNickName(_playFabService.PlayerAccountNickname);
             HideLoadingScreen();
@@ -148,22 +162,18 @@ namespace Core.UI
         {
             HideInterface();
             _loadingScreen.gameObject.SetActive(true);
-            _postProcessVolume.enabled = true;
-            _postProcessLayer.enabled = true;
         }
 
         private void HideLoadingScreen()
         {
             ShowHiddenInterface();
             _loadingScreen.gameObject.SetActive(false);
-            _postProcessVolume.enabled = false;
-            _postProcessLayer.enabled = false;
         }
 
         private void ShowGameOverScreen()
         {
             _loadingScreen.gameObject.SetActive(false);
-            _gameOverInterface.gameObject.SetActive(true);
+            _gameOverScreen.gameObject.SetActive(true);
         }
         
         private void ShowErrorMessage()
@@ -172,31 +182,20 @@ namespace Core.UI
             _errorScreen.gameObject.SetActive(true);
         }
         
-        private void PauseInterface()
+        private void PauseButtons()
         {
-            Button[] newButtonsLayer = FindObjectsOfType<Button>();
-            foreach (var buttonsLayer in _stopButtonsLayers)
+            foreach (var button in _modalUIAffectedButtons)
             {
-                newButtonsLayer = newButtonsLayer.Except(buttonsLayer).ToArray();
-            }
-            _stopButtonsLayers.Add(newButtonsLayer);
-            foreach (var button in newButtonsLayer)
-            {
-                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue; //checking if button layer included in layer mask
                 button.interactable = false;
             }
         }
 
-        private void UnPauseInterface()
+        private void UnPauseButtons()
         {
-            Button[] lastButtonLayer = _stopButtonsLayers.ElementAtOrDefault(_stopButtonsLayers.Count - 1);
-            if (lastButtonLayer == null) return;
-            foreach (var button in lastButtonLayer)
+            foreach (var button in _modalUIAffectedButtons)
             {
-                if ((_viewUIMask.value & (1 << button.gameObject.layer)) != 0) continue; //checking if button layer included in layer mask
                 button.interactable = true;
             }
-            _stopButtonsLayers.Remove(lastButtonLayer);
         }
     }
 }

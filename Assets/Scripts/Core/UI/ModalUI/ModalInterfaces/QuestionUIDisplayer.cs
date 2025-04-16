@@ -1,16 +1,21 @@
 using System;
+using Core.Services.Updater;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Core.UI.ModalUI.ModalInterfaces
 {
-    public class QuestionUIController : MonoBehaviour, IQuestionUIController, IModalUI
+    public class QuestionUIDisplayer : MonoBehaviour, IQuestionUIDisplayer, IModalUI
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private Button _yesButton;
         [SerializeField] private Button _noButton;
 
+        private string _cachedText;
+        private Action _cachedYesButtonClicked;
+        private Action _cachedNoButtonClicked;
+        
         public bool IsShown => gameObject.activeSelf;
         
         public event Action Appeared;
@@ -24,7 +29,13 @@ namespace Core.UI.ModalUI.ModalInterfaces
 
         public void Show(string text, Action yesButtonClicked, Action noButtonClicked)
         {
-            RemoveButtonsListeners();
+            if (ProjectUpdater.Instance != null && !ProjectUpdater.Instance.IsPaused)
+            {
+                _cachedText = text;
+                _cachedYesButtonClicked = yesButtonClicked;
+                _cachedNoButtonClicked = noButtonClicked;
+            }
+            
             Appeared?.Invoke();
             gameObject.SetActive(true);
 
@@ -41,24 +52,18 @@ namespace Core.UI.ModalUI.ModalInterfaces
             });
         }
         
-        public void SetActive()
+        public void Reshow()
         {
-            gameObject.SetActive(true);
+            Show(_cachedText, _cachedYesButtonClicked, _cachedNoButtonClicked);
         }
-
-        public bool SetInactive()
+        
+        public bool Hide()
         {
             if (!IsShown) return false;
             gameObject.SetActive(false);
-            return true;
-        }
-        
-        private void Hide()
-        {
-            if (!IsShown) return;
-            gameObject.SetActive(false);
             RemoveButtonsListeners();
             Disappeared?.Invoke();
+            return true;
         }
 
         private void RemoveButtonsListeners()

@@ -1,15 +1,19 @@
 using System.Collections.Generic;
+using System.Linq;
 using Core.Services.PlayFab;
 using Core.UI.ModalUI;
 using PlayFab.ClientModels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Core.UI
 {
     public class MainMenuUIPresenter : MonoBehaviour
     {
+        [SerializeField] private Transform _userInterface;
+        
         [Header("Starting screens")] 
         [SerializeField] private Transform _mainMenuInterface;
         [SerializeField] private Transform _enteringNicknameWindow;
@@ -26,6 +30,7 @@ namespace Core.UI
         [SerializeField] private Transform _errorScreen;
 
         private PlayFabService _playFabService;
+        private List<Button> _modalUIAffectedButtons;
 
         [field: SerializeField] public TMP_InputField EnteredNickname { get; private set; }
         
@@ -33,6 +38,7 @@ namespace Core.UI
         private void Awake()
         {
             _playFabService = new PlayFabService();
+            _modalUIAffectedButtons = _userInterface.GetComponentsInChildren<Button>(true).ToList();
             
             _playFabService.AccountInfoReceived += ShowStartingMenu;
             _playFabService.NicknameSubmitted += ShowMainMenu;
@@ -46,6 +52,9 @@ namespace Core.UI
             ModalUIController.Instance.ResetModalUIs();
             _loadingScreen.gameObject.SetActive(true);
             _playFabService.Initialize();
+            
+            ModalUIController.Instance.ModalUIAppeared += PauseButtons;
+            ModalUIController.Instance.ModalUIDisappeared += UnPauseButtons;
         }
         
         private void OnDestroy()
@@ -55,9 +64,12 @@ namespace Core.UI
             _playFabService.LeaderboardReceived -= ShowLeaderboard;
             _playFabService.NotAvailableNicknameErrorOccured -= ShowNicknameErrorMessage;
             _playFabService.ErrorOccured -= ShowErrorMessage;
+            
+            ModalUIController.Instance.ModalUIAppeared -= PauseButtons;
+            ModalUIController.Instance.ModalUIDisappeared -= UnPauseButtons;
         }
 
-        public void StartGame()
+        public void StartGameSession()
         {
             int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
 
@@ -70,10 +82,15 @@ namespace Core.UI
 
         public void QuitGame()
         {
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-            #endif
-            Application.Quit();
+            ModalUIController.Instance.Question.Show("Are you sure you want to quit the game?", () =>
+            {
+                ShowLoadingScreen();
+                
+                #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+                #endif
+                Application.Quit();
+            }, null);
         }
 
         public void SubmitNickname()
@@ -146,6 +163,31 @@ namespace Core.UI
         {
             _loadingScreen.gameObject.SetActive(false);
             _errorScreen.gameObject.SetActive(true);
+        }
+
+        private void ShowLoadingScreen()
+        {
+            foreach (Transform windowUI in _userInterface)
+            {
+                windowUI.gameObject.SetActive(false);
+            }
+            _loadingScreen.gameObject.SetActive(true);
+        }
+        
+        private void PauseButtons()
+        {
+            foreach (var button in _modalUIAffectedButtons)
+            {
+                button.interactable = false;
+            }
+        }
+
+        private void UnPauseButtons()
+        {
+            foreach (var button in _modalUIAffectedButtons)
+            {
+                button.interactable = true;
+            }
         }
     }
 }

@@ -28,7 +28,8 @@ namespace Core.Scene
         [SerializeField] private int _startingMoneyAmount;
         
         [Header("UI")] 
-        [SerializeField] private GameSessionMenuUIPresenter _gameUIPresenter;
+        [SerializeField] private GameSessionUIPresenter _gameUIPresenter;
+        [SerializeField] private WarehouseInventoryUIController _warehouseInventoryController;
         
         [Header("Map Camera")]
         [SerializeField] private Camera _cam;
@@ -44,7 +45,6 @@ namespace Core.Scene
         [SerializeField] private CarsStorage _carsStorage;
         
         [Header("Warehousing System")] 
-        [SerializeField] private WarehouseInventoryUIController _warehouseInventoryController;
         [SerializeField] private WarehousesStorage _warehousesStorage;
         [SerializeField] private List<WarehouseScene> _warehousesBehaviours;
 
@@ -73,13 +73,13 @@ namespace Core.Scene
             }
             
             _playerAccount = new PlayerAccountController(_startingMoneyAmount);
-            _gameUIPresenter.GameUIHidden += PauseGame;
-            _gameUIPresenter.GameUIShown += UnpauseGame;
-            _gameUIPresenter.Initialize(_playerAccount, _warehouseInventoryController);
+            _gameUIPresenter.GameUIHidden += PauseGameSession;
+            _gameUIPresenter.GameUIShown += UnpauseGameSession;
+            _gameUIPresenter.Initialize(_playerAccount);
 
             _timerController = new TimerController(_timeInMinutes, _currentTimeText);
             _disposables.Add(_timerController);
-            _timerController.TimeExpired += FinishGame;
+            _timerController.TimeExpired += FinishGameSession;
 
             List<CarDescriptor> carDescriptors = _carsStorage.CarDescriptors;
             CarsFactory carsFactory = new CarsFactory(carDescriptors);
@@ -108,9 +108,9 @@ namespace Core.Scene
         
         private void OnDestroy()
         {
-            _gameUIPresenter.GameUIHidden -= PauseGame;
-            _gameUIPresenter.GameUIShown -= UnpauseGame;
-            _timerController.TimeExpired -= FinishGame;
+            _gameUIPresenter.GameUIHidden -= PauseGameSession;
+            _gameUIPresenter.GameUIShown -= UnpauseGameSession;
+            _timerController.TimeExpired -= FinishGameSession;
             
             foreach (var disposable in _disposables)
             {
@@ -118,19 +118,19 @@ namespace Core.Scene
             }
         }
 
-        private void PauseGame()
+        private void PauseGameSession()
         {
             _projectUpdater.IsPaused = true;
         }
 
-        private void UnpauseGame()
+        private void UnpauseGameSession()
         {
             _projectUpdater.IsPaused = false;
         }
 
-        private void FinishGame()
+        private void FinishGameSession()
         {
-            _gameUIPresenter.FinishGame();
+            _gameUIPresenter.FinishGameSession();
         }
     }
 }

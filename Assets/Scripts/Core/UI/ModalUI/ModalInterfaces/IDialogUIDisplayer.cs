@@ -2,7 +2,7 @@
 
 namespace Core.UI.ModalUI.ModalInterfaces
 {
-    public interface IDialogUIController
+    public interface IDialogUIDisplayer
     {
         void Show(string text, Action okayButtonClicked);
     }

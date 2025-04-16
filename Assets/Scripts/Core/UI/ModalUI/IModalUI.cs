@@ -7,7 +7,7 @@ namespace Core.UI.ModalUI
         bool IsShown { get; }
         event Action Appeared;
         event Action Disappeared;
-        void SetActive();
-        bool SetInactive();
+        void Reshow();
+        bool Hide();
     }
 }
