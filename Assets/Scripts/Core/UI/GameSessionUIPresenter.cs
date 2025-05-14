@@ -24,10 +24,12 @@ namespace Core.UI
         [SerializeField] private PostProcessVolume _postProcessVolume;
         [SerializeField] private PostProcessLayer _postProcessLayer;
 
+        private bool _isGameSessionOver;
         private PlayFabService _playFabService;
         private PlayerAccountController _playerInformation;
-        private List<Transform> _interfacesToReshow;
+        private Stack<List<Transform>> _interfacesLayersToReshow;
         private List<Button> _modalUIAffectedButtons;
+        private List<Button> _buttonsToReactivate;
         
         public event Action GameUIHidden;
         public event Action GameUIShown;
@@ -36,8 +38,9 @@ namespace Core.UI
         private void Awake()
         {
             _playFabService = new PlayFabService();
-            _interfacesToReshow = new List<Transform>();
+            _interfacesLayersToReshow = new Stack<List<Transform>>();
             _modalUIAffectedButtons = new List<Button>();
+            _buttonsToReactivate = new List<Button>();
             List<Button> buttonsOnScene = _userInterface.GetComponentsInChildren<Button>(true).ToList();
             foreach (var button in buttonsOnScene)
             {
@@ -53,7 +56,7 @@ namespace Core.UI
         private void Start()
         {
             ModalUIController.Instance.ResetModalUIs();
-            ShowLoadingScreen();
+            ShowLoadingScreenExclusive();
             _playFabService.Initialize();
             
             ModalUIController.Instance.ModalUIAppeared += PauseButtons;
@@ -77,26 +80,30 @@ namespace Core.UI
         
         public void RestartGameSession()
         {
-            ModalUIController.Instance.Question.Show("Are you sure you want to restart this game session?", () =>
+            if (!_isGameSessionOver)
             {
-                ShowLoadingScreen();
-                
-                int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-                SceneManager.LoadScene(currentSceneIndex);
-            }, null);
+                HideNonModalInterfaces();
+                ModalUIController.Instance.Question.Show("Are you sure you want to restart this game session? \nYour data will NOT be saved.",
+                    ReloadGameScene, ShowHiddenNonModalInterfaces);
+            }
+            else
+            {
+                ReloadGameScene();
+            }
         }
 
         public void ReturnToMainMenu()
         {
-            ModalUIController.Instance.Question.Show("Are you sure you want to return to main menu?", () =>
+            if (!_isGameSessionOver)
             {
-                ShowLoadingScreen();
-                
-                int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-                int mainMenuSceneIndex = currentSceneIndex - 1;
-                if (mainMenuSceneIndex < 0) return;
-                SceneManager.LoadScene(mainMenuSceneIndex); 
-            }, null);
+                HideNonModalInterfaces();
+                ModalUIController.Instance.Question.Show("Are you sure you want to return to the main menu? \nYour data will NOT be saved.",
+                    LoadInitialGameScene, ShowHiddenNonModalInterfaces);
+            }
+            else
+            {
+                LoadInitialGameScene();
+            }
         }
 
         public void ShowPlayerInformation()
@@ -120,12 +127,7 @@ namespace Core.UI
             GameUIHidden?.Invoke();
             
             ModalUIController.Instance.HideModalInterfaces();
-            foreach (Transform windowUI in _userInterface)
-            {
-                if (!windowUI.gameObject.activeSelf) continue;
-                _interfacesToReshow.Add(windowUI);
-                windowUI.gameObject.SetActive(false);
-            }
+            HideNonModalInterfaces();
             
             _postProcessVolume.enabled = true;
             _postProcessLayer.enabled = true;
@@ -136,11 +138,7 @@ namespace Core.UI
             GameUIShown?.Invoke();
             
             ModalUIController.Instance.ShowHiddenModalInterfaces();
-            foreach (Transform windowUI in _interfacesToReshow)
-            {
-                windowUI.gameObject.SetActive(true);
-            }
-            _interfacesToReshow.Clear();
+            ShowHiddenNonModalInterfaces();
             
             _postProcessVolume.enabled = false;
             _postProcessLayer.enabled = false;
@@ -148,23 +146,41 @@ namespace Core.UI
 
         public void FinishGameSession()
         {
-            ShowLoadingScreen();
+            ShowLoadingScreenExclusive();
             _playFabService.UpdateLeaderboard(300000);
         }
         
         private void StartGameSession()
         {
             _playerInformation.SetNickName(_playFabService.PlayerAccountNickname);
-            HideLoadingScreen();
+            RestoreUIAfterLoading();
         }
 
-        private void ShowLoadingScreen()
+        private void ReloadGameScene()
+        {
+            ShowLoadingScreenExclusive();
+                
+            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+            SceneManager.LoadScene(currentSceneIndex);
+        }
+
+        private void LoadInitialGameScene()
+        {
+            ShowLoadingScreenExclusive();
+                
+            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+            int mainMenuSceneIndex = currentSceneIndex - 1;
+            if (mainMenuSceneIndex < 0) return;
+            SceneManager.LoadScene(mainMenuSceneIndex); 
+        }
+
+        private void ShowLoadingScreenExclusive()
         {
             HideInterface();
             _loadingScreen.gameObject.SetActive(true);
         }
 
-        private void HideLoadingScreen()
+        private void RestoreUIAfterLoading()
         {
             ShowHiddenInterface();
             _loadingScreen.gameObject.SetActive(false);
@@ -172,6 +188,7 @@ namespace Core.UI
 
         private void ShowGameOverScreen()
         {
+            _isGameSessionOver = true;
             _loadingScreen.gameObject.SetActive(false);
             _gameOverScreen.gameObject.SetActive(true);
         }
@@ -186,15 +203,40 @@ namespace Core.UI
         {
             foreach (var button in _modalUIAffectedButtons)
             {
+                if (button.interactable == false) continue;
                 button.interactable = false;
+                _buttonsToReactivate.Add(button);
             }
         }
 
         private void UnPauseButtons()
         {
-            foreach (var button in _modalUIAffectedButtons)
+            foreach (var button in _buttonsToReactivate)
             {
                 button.interactable = true;
+            }
+            _buttonsToReactivate.Clear();
+        }
+
+        private void HideNonModalInterfaces()
+        {
+            List<Transform> interfacesLayer = new List<Transform>();
+            foreach (Transform windowUI in _userInterface)
+            {
+                if (!windowUI.gameObject.activeSelf) continue;
+                interfacesLayer.Add(windowUI);
+                windowUI.gameObject.SetActive(false);
+            }
+            _interfacesLayersToReshow.Push(interfacesLayer);
+        }
+        
+        private void ShowHiddenNonModalInterfaces()
+        {
+            if (_interfacesLayersToReshow.Count <= 0) return;
+            List<Transform> interfacesLayer = _interfacesLayersToReshow.Pop();
+            foreach (Transform windowUI in interfacesLayer)
+            {
+                windowUI.gameObject.SetActive(true);
             }
         }
     }

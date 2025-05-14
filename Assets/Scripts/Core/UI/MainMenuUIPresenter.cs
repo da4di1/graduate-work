@@ -30,7 +30,9 @@ namespace Core.UI
         [SerializeField] private Transform _errorScreen;
 
         private PlayFabService _playFabService;
-        private List<Button> _modalUIAffectedButtons;
+        private List<Transform> _interfacesToReshow;
+        private List<Button> _buttonsOnScene;
+        private List<Button> _buttonsToReactivate;
 
         [field: SerializeField] public TMP_InputField EnteredNickname { get; private set; }
         
@@ -38,7 +40,9 @@ namespace Core.UI
         private void Awake()
         {
             _playFabService = new PlayFabService();
-            _modalUIAffectedButtons = _userInterface.GetComponentsInChildren<Button>(true).ToList();
+            _interfacesToReshow = new List<Transform>();
+            _buttonsToReactivate = new List<Button>();
+            _buttonsOnScene = _userInterface.GetComponentsInChildren<Button>(true).ToList();
             
             _playFabService.AccountInfoReceived += ShowStartingMenu;
             _playFabService.NicknameSubmitted += ShowMainMenu;
@@ -50,7 +54,7 @@ namespace Core.UI
         private void Start()
         {
             ModalUIController.Instance.ResetModalUIs();
-            _loadingScreen.gameObject.SetActive(true);
+            ShowLoadingScreenExclusive();
             _playFabService.Initialize();
             
             ModalUIController.Instance.ModalUIAppeared += PauseButtons;
@@ -82,15 +86,16 @@ namespace Core.UI
 
         public void QuitGame()
         {
+            HideNonModalInterfaces();
             ModalUIController.Instance.Question.Show("Are you sure you want to quit the game?", () =>
             {
-                ShowLoadingScreen();
+                ShowLoadingScreenExclusive();
                 
                 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
                 #endif
                 Application.Quit();
-            }, null);
+            }, ShowHiddenNonModalInterfaces);
         }
 
         public void SubmitNickname()
@@ -165,7 +170,7 @@ namespace Core.UI
             _errorScreen.gameObject.SetActive(true);
         }
 
-        private void ShowLoadingScreen()
+        private void ShowLoadingScreenExclusive()
         {
             foreach (Transform windowUI in _userInterface)
             {
@@ -176,18 +181,40 @@ namespace Core.UI
         
         private void PauseButtons()
         {
-            foreach (var button in _modalUIAffectedButtons)
+            foreach (var button in _buttonsOnScene)
             {
+                if (button.interactable == false) continue;
                 button.interactable = false;
+                _buttonsToReactivate.Add(button);
             }
         }
 
         private void UnPauseButtons()
         {
-            foreach (var button in _modalUIAffectedButtons)
+            foreach (var button in _buttonsToReactivate)
             {
                 button.interactable = true;
             }
+            _buttonsToReactivate.Clear();
+        }
+        
+        private void HideNonModalInterfaces()
+        {
+            foreach (Transform windowUI in _userInterface)
+            {
+                if (!windowUI.gameObject.activeSelf) continue;
+                _interfacesToReshow.Add(windowUI);
+                windowUI.gameObject.SetActive(false);
+            }
+        }
+        
+        private void ShowHiddenNonModalInterfaces()
+        {
+            foreach (Transform windowUI in _interfacesToReshow)
+            {
+                windowUI.gameObject.SetActive(true);
+            }
+            _interfacesToReshow.Clear();
         }
     }
 }

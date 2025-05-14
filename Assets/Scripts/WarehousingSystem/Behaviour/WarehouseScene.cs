@@ -74,18 +74,14 @@ namespace WarehousingSystem.Behaviour
         {
             _iconSprite.color = _ownedColor;
             _backgroundSprite.color = _ownedColor;
-            var backgroundColor = _backgroundSprite.color;
-            backgroundColor.a = _backgroundTransparency;
-            _backgroundSprite.color = backgroundColor;
+            ChangeSpriteAlpha(_backgroundSprite, _backgroundTransparency);
         }
 
         public void GetSold()
         {
             _iconSprite.color = _forSaleColor;
             _backgroundSprite.color = _forSaleColor;
-            var backgroundColor = _backgroundSprite.color;
-            backgroundColor.a = _backgroundTransparency;
-            _backgroundSprite.color = backgroundColor;
+            ChangeSpriteAlpha(_backgroundSprite, _backgroundTransparency);
         }
 
         private void TurnBackgroundOff()
@@ -96,6 +92,13 @@ namespace WarehousingSystem.Behaviour
             _backgroundSprite.enabled = false;
             ModalUIController.Instance.ModalUIDisappeared -= TurnBackgroundOff;
             _warehouseInventoryState.WarehouseInventoryDisappeared -= TurnBackgroundOff;
+        }
+
+        private void ChangeSpriteAlpha(SpriteRenderer sprite, float alpha)
+        {
+            var color = sprite.color;
+            color.a = alpha;
+            sprite.color = color;
         }
     }
 }

@@ -79,7 +79,7 @@ namespace Core.UI.WarehouseInventory
                 if (warehouseEntity.GetCarsAmount() > 0)
                 {
                     gameObject.SetActive(false);
-                    _loadCarInventory.Show(warehouseEntity, SetActive, Hide);
+                    _loadCarInventory.Show(warehouseEntity, () => gameObject.SetActive(true), Hide);
                     loadCarButtonClicked?.Invoke();
                 }
                 else
@@ -93,10 +93,10 @@ namespace Core.UI.WarehouseInventory
         {
             foreach (var carUI in _carsUI)
             {
-                carUI.Amount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
-                
                 CarDescriptor carTypeDescriptor = _carsTypesDescriptors.FirstOrDefault(descriptor => descriptor.CarType == carUI.CarType);
                 if (carTypeDescriptor == null) continue;
+                
+                carUI.Amount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();
                 carUI.BuyButton.onClick.AddListener(() =>
                 {
                     ModalUIController.Instance.Question.Show($"Do you want to buy this car for {carTypeDescriptor.Cost}?\n" +
@@ -125,11 +125,6 @@ namespace Core.UI.WarehouseInventory
             gameObject.SetActive(false);
             RemoveButtonsListeners();
             WarehouseInventoryDisappeared?.Invoke();
-        }
-
-        private void SetActive()
-        {
-            gameObject.SetActive(true);
         }
 
         private void RemoveButtonsListeners()
