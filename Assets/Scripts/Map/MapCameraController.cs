@@ -1,7 +1,7 @@
 using System;
 using Core.Services.Updater;
 using Core.UI.ModalUI;
-using Core.UI.WarehouseInventory;
+using Core.UI.WarehouseInventory.Interfaces;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 

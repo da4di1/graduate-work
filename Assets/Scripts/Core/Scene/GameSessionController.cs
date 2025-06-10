@@ -7,7 +7,7 @@ using Core.PlayerAccount;
 using Core.Services.Updater;
 using Core.Timer;
 using Core.UI;
-using Core.UI.WarehouseInventory;
+using Core.UI.WarehouseInventory.Controllers;
 using Map;
 using PathBuilding;
 using TMPro;

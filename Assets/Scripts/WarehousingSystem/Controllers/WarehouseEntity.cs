@@ -7,7 +7,7 @@ using CarsSystem.Enums;
 using CarsSystem.Interfaces;
 using Core.Services.Updater;
 using Core.UI.ModalUI;
-using Core.UI.WarehouseInventory;
+using Core.UI.WarehouseInventory.Interfaces;
 using UnityEngine;
 using WarehousingSystem.Behaviour;
 using WarehousingSystem.Data;
