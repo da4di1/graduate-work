@@ -40,7 +40,7 @@ namespace GameSession.UI.WarehouseInventory.Controllers
             _pathDrawer = pathDrawer;
             foreach (var carUI in _carsUI)
             {
-                CarDescriptor carDescriptor = carsDescriptors.FirstOrDefault(descriptor => descriptor.Type == carUI.CarType);
+                CarDescriptor carDescriptor = carsDescriptors.Find(descriptor => descriptor.Type == carUI.CarType);
                 if (carDescriptor == null) continue;
                 
                 carUI.Capacity.text = carDescriptor.ProductCapacity.ToString(CultureInfo.InvariantCulture);
@@ -74,7 +74,7 @@ namespace GameSession.UI.WarehouseInventory.Controllers
                         () =>
                     {
                         Hide();
-                        _pathDrawer.StartDrawingPath();
+                        _pathDrawer.StartDrawingPathFrom(warehouseEntity.Descriptor.ID);
                         startCarButtonClicked?.Invoke();
                     }, null);
                 }

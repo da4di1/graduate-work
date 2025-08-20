@@ -39,7 +39,7 @@ namespace GameSession.UI.WarehouseInventory.Controllers
             _carsDescriptors = carsDescriptors;
             foreach (var carUI in _carsUI)
             {
-                CarDescriptor carDescriptor = carsDescriptors.FirstOrDefault(descriptor => descriptor.Type == carUI.CarType);
+                CarDescriptor carDescriptor = carsDescriptors.Find(descriptor => descriptor.Type == carUI.CarType);
                 if (carDescriptor == null) continue;
                 
                 carUI.Cost.text = carDescriptor.Cost + "$";
@@ -94,7 +94,7 @@ namespace GameSession.UI.WarehouseInventory.Controllers
         {
             foreach (var carUI in _carsUI)
             {
-                CarDescriptor carDescriptor = _carsDescriptors.FirstOrDefault(descriptor => descriptor.Type == carUI.CarType);
+                CarDescriptor carDescriptor = _carsDescriptors.Find(descriptor => descriptor.Type == carUI.CarType);
                 if (carDescriptor == null) continue;
                 
                 carUI.Amount.text = warehouseEntity.GetCarsAmount(carUI.CarType).ToString();

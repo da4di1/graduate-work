@@ -73,7 +73,7 @@ namespace GameSession.Warehouses.Controllers
         
         public void SellCar(CarType carType)
         {
-            ICarInformation carToSell = _cars.FirstOrDefault(car => car.Descriptor.Type == carType);
+            ICarInformation carToSell = _cars.Find(car => car.Descriptor.Type == carType);
             if (carToSell == null)
             {
                 ModalUIController.Instance.Dialog.Show("You do not have any cars of this type!", null);

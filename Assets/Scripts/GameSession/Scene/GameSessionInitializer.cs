@@ -58,8 +58,8 @@ namespace GameSession.Scene
         private TouchInputReader _touchInputReader;
         private TimerController _timerController;
         private CarsSystem _carsSystem;
-        private PathDrawer _pathDrawer;
         private MapCameraController _mapCameraController;
+        private PathDrawer _pathDrawer;
         private WarehousesSystem _warehousesSystem;
         private List<ISceneInputSource> _inputSources;
         private List<IDisposable> _disposables;
@@ -105,13 +105,14 @@ namespace GameSession.Scene
             _carsSystem = new CarsSystem(carsFactory);
             _disposables.Add(_carsSystem);
             
-            _pathDrawer = new PathDrawer(_lineRenderer, _pathPoints, _carsSystem);
+            _mapCameraController = new MapCameraController(_cam, _zoomStep, _minCamSize, _mapRenderer, _inputSources);
+            _disposables.Add(_mapCameraController);
+            
+            List<PathPointDescriptor> pathPoints = _pathPoints.GetComponentsInChildren<PathPointDescriptor>(true).ToList();
+            _pathDrawer = new PathDrawer(pathPoints, _lineRenderer, _mapCameraController, _carsSystem, _inputSources);
             _disposables.Add(_pathDrawer);
             
             _warehouseInventoryController.Initialize(carDescriptors, _pathDrawer);
-            
-            _mapCameraController = new MapCameraController(_cam, _zoomStep, _minCamSize, _mapRenderer, _warehouseInventoryController, _inputSources);
-            _disposables.Add(_mapCameraController);
 
             List<SceneWarehouse> sceneWarehouses = _sceneWarehouses.GetComponentsInChildren<SceneWarehouse>().ToList();
             List<WarehouseDescriptor> warehousesDescriptors = _warehousesStorage.WarehouseDescriptors;

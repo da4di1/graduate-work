@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Core.ModalUI;
 using Core.Services.Updater;
 using GameSession.Cars;
@@ -28,7 +27,7 @@ namespace GameSession.Warehouses
             _warehousesOnScene = new Dictionary<SceneWarehouse, WarehouseEntity>();
             foreach (var sceneWarehouse in sceneWarehouses)
             {
-                WarehouseDescriptor warehouseDescriptor = warehousesDescriptors.FirstOrDefault(descriptor => descriptor.Id == sceneWarehouse.WarehouseId);
+                WarehouseDescriptor warehouseDescriptor = warehousesDescriptors.Find(descriptor => descriptor.ID == sceneWarehouse.WarehouseId);
                 if (warehouseDescriptor == null) continue;
                 
                 WarehouseEntity warehouseEntity = new WarehouseEntity(warehouseDescriptor, carsFactory);

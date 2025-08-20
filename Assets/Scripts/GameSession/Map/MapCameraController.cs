@@ -19,14 +19,16 @@ namespace GameSession.Map
         private readonly float _mapMaxX;
         private readonly float _mapMinY;
         private readonly float _mapMaxY;
-        private readonly IWarehouseInventoryState _warehouseInventoryState;
+        /*private readonly IWarehouseInventoryState _warehouseInventoryState;*/
         private readonly List<ISceneInputSource> _inputSources;
-        private Vector3 _dragOrigin;
-        private ISceneInputSource _currentInputSource;
+        
+        private Vector3 _camDragOrigin;
+        private ISceneInputSource _clickOverObjectInputSource;
+        private ISceneInputSource _currentClickInputSource;
 
 
         public MapCameraController(Camera cam, float zoomStep, float minCamSize, TilemapRenderer mapRenderer, 
-            IWarehouseInventoryState warehouseInventoryState, List<ISceneInputSource> inputSources)
+            /*IWarehouseInventoryState warehouseInventoryState,*/ List<ISceneInputSource> inputSources)
         {
             _cam = cam;
             _zoomStep = zoomStep;
@@ -40,66 +42,84 @@ namespace GameSession.Map
             _mapMinY = mapRenderer.bounds.center.y - mapRenderer.bounds.size.y / 2f;
             _mapMaxY = mapRenderer.bounds.center.y + mapRenderer.bounds.size.y / 2f - 1f; //Cutting out trees outside the map with "-1f"
 
-            _warehouseInventoryState = warehouseInventoryState;
+            /*_warehouseInventoryState = warehouseInventoryState;*/
             _inputSources = inputSources;
             
             ProjectUpdater.Instance.UpdateCalled += OnUpdate;
             foreach (var inputSource in _inputSources)
             {
-                inputSource.ClickHoldOriginUpdated += UpdateDragOrigin;
+                inputSource.ClickDown += TryRegisterClickOverMapObject;
+                inputSource.ClickHoldOriginUpdated += UpdateCamDragOrigin;
             }
         }
-
-        public void Dispose()
+        
+        public Vector3 ConvertToMapPosition(Vector3 screenPosition)
+        {
+            return _cam.ScreenToWorldPoint(screenPosition);
+        }
+        
+        void IDisposable.Dispose()
         {
             ProjectUpdater.Instance.UpdateCalled -= OnUpdate;
             foreach (var inputSource in _inputSources)
             {
-                inputSource.ClickHoldOriginUpdated -= UpdateDragOrigin;
+                inputSource.ClickDown -= TryRegisterClickOverMapObject;
+                inputSource.ClickHoldOriginUpdated -= UpdateCamDragOrigin;
             }
         }
     
         private void OnUpdate()
         {
-            if (ModalUIController.Instance.IsModalUIShown || _warehouseInventoryState.IsWarehouseInventoryUIShown) return;
+            if (_clickOverObjectInputSource is { IsClickHeld: true }) return;
+            _clickOverObjectInputSource = null;
+            
+            if (ModalUIController.Instance.IsModalUIShown /*|| _warehouseInventoryState.IsWarehouseInventoryUIShown*/) return;
             DragCamera();
             ZoomCamera();
         }
 
-        private void UpdateDragOrigin(Vector3 newDragOrigin)
+        private void TryRegisterClickOverMapObject(ISceneInputSource clickInputSource)
         {
-            _dragOrigin = newDragOrigin;
+            if (_clickOverObjectInputSource != null) return;
+            Vector3 clickPosition = ConvertToMapPosition(clickInputSource.PointerPosition);
+            RaycastHit2D hit = Physics2D.Raycast(clickPosition, Vector2.zero);
+            _clickOverObjectInputSource = hit.collider != null ? clickInputSource : null;
+        }
+
+        private void UpdateCamDragOrigin(Vector3 newDragOrigin)
+        {
+            _camDragOrigin = ConvertToMapPosition(newDragOrigin);
         }
         
         private void DragCamera()
         {
-            _currentInputSource ??= _inputSources.Find(inputSource => inputSource.IsClickHeld);
-            if (_currentInputSource == null) return;
+            _currentClickInputSource ??= _inputSources.Find(inputSource => inputSource.IsClickHeld);
+            if (_currentClickInputSource == null) return;
             
-            if (!_currentInputSource.IsClickHeld)
+            if (!_currentClickInputSource.IsClickHeld)
             {
-                _currentInputSource = null;
+                _currentClickInputSource = null;
             }
             else
             {
-                Vector3 dragDelta = _dragOrigin - _cam.ScreenToWorldPoint(_currentInputSource.PointerPosition);
+                Vector3 dragDelta = _camDragOrigin - ConvertToMapPosition(_currentClickInputSource.PointerPosition);
                 _cam.transform.position = ClampCamera(_cam.transform.position + dragDelta);
             }
         }
 
         private void ZoomCamera()
         {
-            var currentZoomInputSource = _currentInputSource;
+            var currentZoomInputSource = _currentClickInputSource;
             currentZoomInputSource ??= _inputSources.Find(inputSource => inputSource.ZoomDelta != 0);
-            if (currentZoomInputSource == null) return;
+            if (currentZoomInputSource == null || currentZoomInputSource.ZoomDelta == 0) return;
             
-            Vector3 pointerPositionBeforeZoom = _cam.ScreenToWorldPoint(currentZoomInputSource.PointerPosition);
+            Vector3 pointerPositionBeforeZoom = ConvertToMapPosition(currentZoomInputSource.PointerPosition);
             
             float newSize = _cam.orthographicSize;
             newSize -= currentZoomInputSource.ZoomDelta * _zoomStep;
             _cam.orthographicSize = Mathf.Clamp(newSize, _minCamSize, _maxCamSize);
             
-            Vector3 pointerPositionAfterZoom = _cam.ScreenToWorldPoint(currentZoomInputSource.PointerPosition);
+            Vector3 pointerPositionAfterZoom = ConvertToMapPosition(currentZoomInputSource.PointerPosition);
             Vector3 cameraShiftDelta = pointerPositionBeforeZoom - pointerPositionAfterZoom;
             
             _cam.transform.position = ClampCamera(_cam.transform.position + cameraShiftDelta);

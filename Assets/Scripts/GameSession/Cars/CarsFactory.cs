@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using GameSession.Cars.Controllers;
 using GameSession.Cars.Data;
 using GameSession.Cars.Enums;
@@ -20,7 +19,7 @@ namespace GameSession.Cars
         public CarEntity CreateCar(CarType carType, Vector3[] pathPositions)
         {
             CarEntity carEntity = null;
-            CarDescriptor carDescriptor = _carDescriptors.FirstOrDefault(descriptor => descriptor.Type == carType);
+            CarDescriptor carDescriptor = _carDescriptors.Find(descriptor => descriptor.Type == carType);
             if (carDescriptor != null)
             {
                 carEntity = new CarEntity(carDescriptor, pathPositions);

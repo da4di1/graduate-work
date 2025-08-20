@@ -18,7 +18,7 @@ namespace GameSession.Warehouses.Behaviour
         private bool _isBackgroundHidingDelayed;
         private IWarehouseInventoryState _warehouseInventoryState;
         
-        [field: SerializeField] public WarehouseId WarehouseId { get; private set; }
+        [field: SerializeField] public WarehouseID WarehouseId { get; private set; }
         
         public bool Clicked { get; private set; }
         public bool Hovered { get; private set; }
